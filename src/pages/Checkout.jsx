@@ -9,10 +9,15 @@ export default function Checkout(){
   const [shootTime, setShootTime] = useState('')
   const [selected, setSelected] = useState([])
   const [msg, setMsg] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e){
     e.preventDefault()
     if(selected.length===0){ setMsg('اختر معدات على الاقل'); return }
+    // block if any qty exceeds available (defensive)
+    const invalid = selected.find(it => Number(it.selectedQty)>Number(it.available_qty))
+    if(invalid){ setMsg(`لا يمكن اختيار كمية أكبر من المتاح للمعدة: ${invalid.name}`); return }
+    setSubmitting(true)
 
     // Create transaction
     const { data: tx, error: txErr } = await supabase.from('transactions').insert([{
@@ -23,7 +28,7 @@ export default function Checkout(){
       status: 'open'
     }]).select().maybeSingle()
 
-    if(txErr || !tx){ setMsg('خطأ في انشاء الطلب'); return }
+  if(txErr || !tx){ setMsg('خطأ في انشاء الطلب'); setSubmitting(false); return }
 
     // insert items and decrement available_qty
     for(const it of selected){
@@ -41,6 +46,7 @@ export default function Checkout(){
     setMsg('تم تسجيل اخذ المعدات')
     // reset
     setProjectName(''); setProjectOwner(''); setSelected([])
+    setSubmitting(false)
   }
 
   return (
@@ -66,7 +72,7 @@ export default function Checkout(){
 
         <EquipmentSelector onChange={setSelected} />
 
-        <button type="submit">تأكيد الأخذ</button>
+        <button type="submit" disabled={submitting}>تأكيد الأخذ</button>
       </form>
       <div>{msg}</div>
     </div>
