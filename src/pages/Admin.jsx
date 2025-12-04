@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 function statusArabic(s){
@@ -123,7 +124,9 @@ export default function Admin(){
     <div>
       <h2>لوحة المشرف</h2>
       <div style={{marginBottom:12, display:'flex', gap:8}}>
-        <a href="/admin/verify"><button>الانتقال إلى صفحة التحقق من العهدة</button></a>
+        <Link to="/admin/verify" style={{textDecoration:'none'}}>
+          <button type="button">الانتقال إلى صفحة التحقق من العهدة</button>
+        </Link>
       </div>
       {msg && <div style={{color:'green'}}>{msg}</div>}
 
