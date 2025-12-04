@@ -13,6 +13,9 @@ export default function Admin(){
   const [tx, setTx] = useState([])
   const [msg, setMsg] = useState('')
   const [showOnlyPending, setShowOnlyPending] = useState(true)
+  const [newEmail, setNewEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [newRole, setNewRole] = useState('employee')
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -91,6 +94,41 @@ export default function Admin(){
         </label>
       </div>
       {msg && <div style={{color:'green'}}>{msg}</div>}
+
+      <section style={{padding:'8px 0', borderTop:'1px solid #ddd', marginTop:8}}>
+        <h3>إنشاء حساب موظف / أدمن</h3>
+        <div style={{display:'flex', gap:8, flexWrap:'wrap', alignItems:'center'}}>
+          <input type="email" placeholder="الإيميل" value={newEmail} onChange={e=>setNewEmail(e.target.value)} />
+          <input type="password" placeholder="كلمة السر" value={newPassword} onChange={e=>setNewPassword(e.target.value)} />
+          <label>
+            الدور:
+            <select value={newRole} onChange={e=>setNewRole(e.target.value)}>
+              <option value="employee">موظف</option>
+              <option value="admin">اداري</option>
+            </select>
+          </label>
+          <button onClick={async()=>{
+            setMsg('جارٍ إنشاء المستخدم...')
+            try{
+              const resp = await fetch('/api/create-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: newEmail, password: newPassword, role: newRole })
+              })
+              const json = await resp.json()
+              if(!resp.ok){
+                setMsg(`فشل إنشاء المستخدم: ${json.error || 'خطأ غير معروف'}`)
+              }else{
+                setMsg('تم إنشاء المستخدم بنجاح')
+                setNewEmail(''); setNewPassword(''); setNewRole('employee')
+              }
+            }catch(e){
+              setMsg('حدث خطأ أثناء الاتصال بالخادم')
+            }
+          }}>إنشاء</button>
+        </div>
+        <p style={{fontSize:12, color:'#666'}}>ملاحظة: يتطلب هذا إعداد مفتاح الخدمة في Vercel (SUPABASE_SERVICE_ROLE_KEY).</p>
+      </section>
       <ul>
         {visibleTx.map(t=> (
           <li key={t.id} style={{marginBottom:10}}>
