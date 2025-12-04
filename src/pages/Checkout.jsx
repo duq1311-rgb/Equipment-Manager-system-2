@@ -51,7 +51,7 @@ export default function Checkout(){
 
   return (
     <div>
-      <h2>اخذ معدات</h2>
+      <h2>استلام عهدة</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>اسم المشروع</label>
@@ -62,7 +62,7 @@ export default function Checkout(){
           <input value={projectOwner} onChange={e=>setProjectOwner(e.target.value)} />
         </div>
         <div>
-          <label>وقت الأخذ</label>
+          <label>وقت استلام العهدة</label>
           <input type="datetime-local" value={checkoutTime} onChange={e=>setCheckoutTime(e.target.value)} />
         </div>
         <div>
@@ -72,7 +72,7 @@ export default function Checkout(){
 
         <EquipmentSelector onChange={setSelected} />
 
-        <button type="submit" disabled={submitting}>تأكيد الأخذ</button>
+        <button type="submit" disabled={submitting}>تأكيد الاستلام</button>
       </form>
       <div>{msg}</div>
     </div>

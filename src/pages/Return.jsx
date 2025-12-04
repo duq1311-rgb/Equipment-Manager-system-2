@@ -43,9 +43,9 @@ export default function ReturnPage(){
 
   return (
     <div>
-      <h2>ارجاع معدات</h2>
+      <h2>تسليم العهدة</h2>
       <div>
-        <label>المعاملات المفتوحة</label>
+        <label>العهد المفتوحة</label>
         <ul>
           {openTx.map(tx=> (
             <li key={tx.id}><button onClick={()=>loadItems(tx.id)}>{tx.project_name} — {tx.project_owner}</button></li>
@@ -55,7 +55,7 @@ export default function ReturnPage(){
 
       {selectedTx && (
         <div>
-          <h3>تفاصيل الإرجاع</h3>
+          <h3>تفاصيل التسليم</h3>
           {selectedTx.items.map(it=> (
             <div key={it.id} className="equipment-row">
               <div style={{width:24}}>
@@ -106,11 +106,11 @@ export default function ReturnPage(){
           </div>
 
           <div>
-            <label>موعد إرجاع المعدات</label>
+            <label>موعد تسليم العهدة</label>
             <input type="datetime-local" />
           </div>
 
-          <button onClick={confirmReturn}>تأكيد الإرجاع</button>
+          <button onClick={confirmReturn}>تأكيد التسليم</button>
         </div>
       )}
 
