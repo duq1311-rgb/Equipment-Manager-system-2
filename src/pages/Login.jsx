@@ -27,7 +27,7 @@ export default function Login(){
     <section style={{maxWidth:600, margin:'0 auto'}}>
       <header style={{textAlign:'center', marginBottom:12}}>
         {/* شعار الشركة */}
-        <img src="/logo.png" alt="Company Logo" style={{width:96, height:96, objectFit:'contain', display:'inline-block'}} />
+  <img src="/logo.png" alt="Company Logo" style={{width:120, height:120, objectFit:'contain', display:'inline-block'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
   <h2 style={{marginTop:8}}>نظام ادارة معدات التصوير</h2>
         <p style={{color:'#666'}}>Photography Equipment Management System</p>
       </header>

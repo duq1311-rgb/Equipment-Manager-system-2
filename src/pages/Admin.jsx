@@ -95,7 +95,7 @@ export default function Admin(){
   }, [tx, showOnlyPending])
 
   return (
-    <section className="card">
+    <div>
       <h2>لوحة المشرف</h2>
       <p>إدارة الإرجاعات والتحقق:</p>
       <div style={{marginBottom:8}}>
@@ -206,6 +206,6 @@ export default function Admin(){
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   )
 }

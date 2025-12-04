@@ -4,13 +4,13 @@ import { useNavigate, Link } from 'react-router-dom'
 export default function Home(){
   const nav = useNavigate()
   return (
-    <section className="card">
+    <div>
       <h2>مرحباً</h2>
       <p>اختر الإجراء:</p>
       <div style={{display:'flex', gap:12}}>
-        <Link to="/checkout" role="button">استلام عهدة</Link>
-        <Link to="/return" role="button" className="secondary">تسليم العهدة</Link>
+        <button onClick={()=>nav('/checkout')} style={{padding:12}}>استلام عهدة</button>
+        <button onClick={()=>nav('/return')} style={{padding:12}}>تسليم العهدة</button>
       </div>
-    </section>
+    </div>
   )
 }
