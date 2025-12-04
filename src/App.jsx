@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Checkout from './pages/Checkout'
 import ReturnPage from './pages/Return'
 import Admin from './pages/Admin'
+import AdminVerify from './pages/AdminVerify'
 // import ImportExcel from './pages/ImportExcel'
 import Home from './pages/Home'
 import { supabase } from './lib/supabase'
@@ -70,6 +71,7 @@ export default function App(){
           <Route path="/checkout" element={<Checkout/>} />
           <Route path="/return" element={<ReturnPage/>} />
           <Route path="/admin" element={<Admin/>} />
+          <Route path="/admin/verify" element={<AdminVerify/>} />
           {/* صفحة الاستيراد أزيلت من الموقع */}
         </Routes>
       </main>
