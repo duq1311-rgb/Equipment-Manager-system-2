@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function EquipmentSelector({onChange}){
   const [items, setItems] = useState([])
   const [errors, setErrors] = useState({})
+  const [activeCategory, setActiveCategory] = useState(null)
 
   useEffect(()=>{ fetchEquip() }, [])
 
   async function fetchEquip(){
     const { data } = await supabase.from('equipment').select('*').order('name')
     setItems(data || [])
+    // set initial category to first available
+    const categories = getCategories(data || [])
+    if(categories.length>0) setActiveCategory(categories[0])
   }
 
   function setQty(id, qty){
@@ -25,10 +29,42 @@ export default function EquipmentSelector({onChange}){
     onChange && onChange(next.filter(i=>i.selectedQty>0))
   }
 
+  function getCategories(list){
+    const set = new Set()
+    for(const it of list){
+      const cat = it.metadata && (it.metadata.category || it.metadata.Category) || null
+      if(cat) set.add(cat)
+    }
+    return Array.from(set)
+  }
+
+  const categories = useMemo(()=> getCategories(items), [items])
+  const filteredItems = useMemo(()=> items.filter(it=>{
+    const cat = it.metadata && (it.metadata.category || it.metadata.Category) || null
+    return !activeCategory || cat === activeCategory
+  }), [items, activeCategory])
+
   return (
     <div>
-      <p>اختر المعدات (ادخل عدد لكل معدة):</p>
-      {items.map(it=> (
+      <p>اختر الفئة أولاً:</p>
+      <div style={{display:'flex', gap:8, flexWrap:'wrap', marginBottom:8}}>
+        {categories.map(cat => (
+          <button
+            type="button"
+            key={cat}
+            onClick={()=>setActiveCategory(cat)}
+            style={{
+              padding:'8px 12px',
+              border:'1px solid #ccc',
+              borderRadius:6,
+              background: activeCategory===cat ? '#eee' : '#fff'
+            }}
+          >{cat}</button>
+        ))}
+      </div>
+
+      <p>المعدات ضمن الفئة: <strong>{activeCategory || 'الكل'}</strong></p>
+      {filteredItems.map(it=> (
         <div className="equipment-row" key={it.id}>
           <div style={{flex:1}}>{it.name} — متوفر: {it.available_qty}</div>
           <input type="number" min="0" max={it.available_qty} value={it.selectedQty||0}
@@ -36,6 +72,15 @@ export default function EquipmentSelector({onChange}){
           {errors[it.id] && <span style={{color:'red', marginInlineStart:8}}>{errors[it.id]}</span>}
         </div>
       ))}
+
+      <div style={{marginTop:10}}>
+        <button type="button" onClick={()=>{
+          // choose next category if exists
+          const idx = categories.findIndex(c=>c===activeCategory)
+          const nextCat = categories[(idx+1) % (categories.length||1)]
+          setActiveCategory(nextCat)
+        }}>إضافة معدات من فئة أخرى</button>
+      </div>
     </div>
   )
 }
