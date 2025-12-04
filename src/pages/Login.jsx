@@ -1,16 +1,26 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 
 export default function Login(){
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
+  const navigate = useNavigate()
 
   async function handleSubmit(e){
     e.preventDefault()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if(error) setMsg(error.message)
-    else setMsg('تم تسجيل الدخول')
+    try{
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if(error) setMsg(error.message)
+      else {
+        setMsg('تم تسجيل الدخول')
+        // redirect to home
+        navigate('/')
+      }
+    }catch(err){
+      setMsg(err.message || 'خطأ في تسجيل الدخول')
+    }
   }
 
   return (

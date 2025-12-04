@@ -15,23 +15,24 @@ export default function ReturnPage(){
 
   async function loadItems(txId){
     const { data } = await supabase.from('transaction_items').select('*, equipment(*)').eq('transaction_id', txId)
-    // attach fields for damaged/lost and returned qty
-    setSelectedTx({ id: txId, items: (data || []).map(d=>({ ...d, returnedQty: d.qty, damaged:false, lost:false })) })
+    // attach fields for damaged/lost and returned qty and include checkbox
+    setSelectedTx({ id: txId, items: (data || []).map(d=>({ ...d, returnedQty: d.qty, damaged:false, lost:false, include:true })) })
   }
 
   async function confirmReturn(){
     if(!selectedTx) return
-    // Update equipment counts and write notes
+    // Update equipment counts and write notes only for included items
     for(const it of selectedTx.items){
+      if(!it.include) continue
       if(it.returnedQty > 0){
         // increase available by returnedQty if not lost
         const add = it.lost ? 0 : it.returnedQty
         if(add>0){
           await supabase.from('equipment').update({ available_qty: (it.equipment.available_qty || 0) + add }).eq('id', it.equipment.id)
         }
-        // update transaction_items row
-        await supabase.from('transaction_items').update({ damaged: it.damaged, damage_notes: it.damage_notes || null, lost: it.lost, lost_notes: it.lost_notes || null }).eq('id', it.id)
       }
+      // update transaction_items row (include returned qty and flags)
+      await supabase.from('transaction_items').update({ returned_qty: it.returnedQty, damaged: it.damaged, damage_notes: it.damage_notes || null, lost: it.lost, lost_notes: it.lost_notes || null }).eq('id', it.id)
     }
     // Optionally close transaction
     await supabase.from('transactions').update({ status: 'closed', return_time: new Date().toISOString() }).eq('id', selectedTx.id)
@@ -57,6 +58,12 @@ export default function ReturnPage(){
           <h3>تفاصيل الإرجاع</h3>
           {selectedTx.items.map(it=> (
             <div key={it.id} className="equipment-row">
+              <div style={{width:24}}>
+                <input type="checkbox" checked={!!it.include} onChange={e=>{
+                  const val = !!e.target.checked
+                  setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, include: val}: x)}))
+                }} />
+              </div>
               <div style={{flex:1}}>{it.equipment.name} — أخذ: {it.qty}</div>
               <label>كمية راجعة</label>
               <input type="number" min="0" max={it.qty} value={it.returnedQty} onChange={e=>{
