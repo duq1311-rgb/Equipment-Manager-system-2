@@ -8,8 +8,8 @@ export default function Home(){
       <h2>مرحباً</h2>
       <p>اختر الإجراء:</p>
       <div style={{display:'flex', gap:12}}>
-        <button onClick={()=>nav('/checkout')} style={{padding:12}}>استلام عهدة</button>
-        <button onClick={()=>nav('/return')} style={{padding:12}}>تسليم العهدة</button>
+        <Link to="/checkout" role="button">استلام عهدة</Link>
+        <Link to="/return" role="button" className="secondary">تسليم العهدة</Link>
       </div>
     </div>
   )

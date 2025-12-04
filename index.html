@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Equipment Manager</title>
+    <!-- إضافة إطار تصميم خفيف: Pico.css عبر CDN لتجميل الواجهة بسرعة -->
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+    <style>
+      :root { direction: rtl; }
+      body { max-width: 960px; margin: 0 auto; padding: 16px; }
+      nav { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; }
+      nav a { margin-inline-end: 8px; }
+      .equipment-row { display: flex; gap: 8px; align-items: center; padding: 8px; border: 1px solid #eee; border-radius: 8px; margin: 6px 0; }
+      form > div { margin: 8px 0; }
+      button { cursor: pointer; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
