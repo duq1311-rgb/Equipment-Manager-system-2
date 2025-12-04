@@ -10,6 +10,7 @@ export default function Home(){
       <div style={{display:'flex', gap:12}}>
         <button onClick={()=>nav('/checkout')} style={{padding:12}}>استلام عهدة</button>
         <button onClick={()=>nav('/return')} style={{padding:12}}>تسليم العهدة</button>
+        <button onClick={()=>nav('/admin')} style={{padding:12}}>لوحة المشرف</button>
       </div>
     </div>
   )

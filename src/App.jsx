@@ -47,12 +47,6 @@ export default function App(){
 
   return (
     <div className="app">
-      <nav>
-        <Link to="/">الرئيسية</Link> | <Link to="/checkout">استلام عهدة</Link> | <Link to="/return">تسليم العهدة</Link> | <Link to="/admin">Admin</Link>
-        <span style={{marginInlineStart:12}}>
-          <button onClick={async()=>{ try{ await (supabase.auth && supabase.auth.signOut ? supabase.auth.signOut() : Promise.resolve()) }catch(e){} window.location.href='/login' }}>تسجيل خروج</button>
-        </span>
-      </nav>
       <main>
         <Routes>
           <Route path="/" element={<Home/>} />
