@@ -6,9 +6,14 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY) ? createClient(SUPABASE
 
 export default async function handler(req, res){
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
-  if(!supabaseAdmin) return res.status(500).json({ error: 'Server not configured' })
+  if(!supabaseAdmin){
+    const missing = []
+    if(!SUPABASE_URL) missing.push('SUPABASE_URL')
+    if(!SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+    return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
+  }
   try{
-    // List users via Admin API
+    // List users via Admin API (first page)
     const { data, error } = await supabaseAdmin.auth.admin.listUsers()
     if(error) return res.status(400).json({ error: error.message })
     // Optionally enrich with profiles
