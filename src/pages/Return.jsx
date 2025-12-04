@@ -42,7 +42,7 @@ export default function ReturnPage(){
   }
 
   return (
-    <div>
+    <section className="card">
       <h2>تسليم العهدة</h2>
       <div>
         <label>العهد المفتوحة</label>
@@ -115,6 +115,6 @@ export default function ReturnPage(){
       )}
 
       <div>{msg}</div>
-    </div>
+    </section>
   )
 }

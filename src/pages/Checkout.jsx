@@ -53,7 +53,7 @@ export default function Checkout(){
   }
 
   return (
-    <div>
+    <section className="card">
       <h2>استلام عهدة</h2>
       <form onSubmit={handleSubmit}>
         <div>
@@ -78,6 +78,6 @@ export default function Checkout(){
         <button type="submit" disabled={submitting}>تأكيد الاستلام</button>
       </form>
       <div>{msg}</div>
-    </div>
+    </section>
   )
 }
