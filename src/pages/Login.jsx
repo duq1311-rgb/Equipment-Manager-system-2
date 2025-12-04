@@ -24,26 +24,33 @@ export default function Login(){
   }
 
   return (
-    <section style={{maxWidth:600, margin:'0 auto'}}>
-      <header style={{textAlign:'center', marginBottom:12}}>
-        {/* شعار الشركة */}
-  <img src="/logo.png" alt="Company Logo" style={{width:120, height:120, objectFit:'contain', display:'inline-block'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
-  <h2 style={{marginTop:8}}>نظام ادارة معدات التصوير</h2>
-        <p style={{color:'#666'}}>Photography Equipment Management System</p>
-      </header>
+    <div>
+      <div className="login-header">
+        <span className="title">نظام ادارة معدات التصوير</span>
+        <img src="/logo.png" alt="Logo" onError={(e)=>{ e.currentTarget.style.display='none' }} />
+      </div>
+      <div className="login-wrapper">
+        <div className="login-card">
+          <div style={{textAlign:'center'}}>
+            <img src="/logo.png" alt="Logo" style={{width:48, height:48, objectFit:'contain'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
+            <div style={{fontWeight:600, marginTop:6}}>Team Falcons</div>
+          </div>
 
-      <form onSubmit={handleSubmit}>
-        <label>
-          البريد الإلكتروني / Email
-          <input type="email" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
-        </label>
-        <label>
-          كلمة السر / Password
-          <input type="password" placeholder="•••••••" value={password} onChange={e=>setPassword(e.target.value)} />
-        </label>
-        <button type="submit">تسجيل الدخول / Login</button>
-      </form>
-      {msg && <div style={{marginTop:8, color: msg.includes('خطأ')||msg.includes('error') ? 'red' : 'green'}}>{msg}</div>}
-    </section>
+          <h2>تسجيل الدخول</h2>
+          <form onSubmit={handleSubmit}>
+            <label>
+              اسم المستخدم
+              <input type="email" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
+            </label>
+            <label>
+              كلمة المرور
+              <input type="password" placeholder="•••••••" value={password} onChange={e=>setPassword(e.target.value)} />
+            </label>
+            <button type="submit">دخول</button>
+          </form>
+          {msg && <div style={{marginTop:8, color: msg.includes('خطأ')||msg.includes('error') ? 'red' : 'green'}}>{msg}</div>}
+        </div>
+      </div>
+    </div>
   )
 }
