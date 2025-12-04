@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Checkout from './pages/Checkout'
 import ReturnPage from './pages/Return'
 import Admin from './pages/Admin'
-import ImportExcel from './pages/ImportExcel'
+// import ImportExcel from './pages/ImportExcel'
 import Home from './pages/Home'
 import { supabase } from './lib/supabase'
 
@@ -48,7 +48,7 @@ export default function App(){
   return (
     <div className="app">
       <nav>
-        <Link to="/">الرئيسية</Link> | <Link to="/checkout">استلام عهدة</Link> | <Link to="/return">تسليم العهدة</Link> | <Link to="/import">استيراد معدات</Link> | <Link to="/admin">Admin</Link>
+        <Link to="/">الرئيسية</Link> | <Link to="/checkout">استلام عهدة</Link> | <Link to="/return">تسليم العهدة</Link> | <Link to="/admin">Admin</Link>
         <span style={{marginInlineStart:12}}>
           <button onClick={async()=>{ try{ await (supabase.auth && supabase.auth.signOut ? supabase.auth.signOut() : Promise.resolve()) }catch(e){} window.location.href='/login' }}>تسجيل خروج</button>
         </span>
@@ -60,7 +60,7 @@ export default function App(){
           <Route path="/checkout" element={<Checkout/>} />
           <Route path="/return" element={<ReturnPage/>} />
           <Route path="/admin" element={<Admin/>} />
-          <Route path="/import" element={<ImportExcel/>} />
+          {/* صفحة الاستيراد أزيلت من الموقع */}
         </Routes>
       </main>
     </div>
