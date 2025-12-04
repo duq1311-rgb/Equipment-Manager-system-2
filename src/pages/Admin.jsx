@@ -13,10 +13,7 @@ export default function Admin(){
   const [tx, setTx] = useState([])
   const [msg, setMsg] = useState('')
   const [showOnlyPending, setShowOnlyPending] = useState(true)
-  const [newEmail, setNewEmail] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [newRole, setNewRole] = useState('employee')
-  const [users, setUsers] = useState([])
+  // إزالة إدارة المستخدمين من لوحة الأدمن
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -32,8 +29,7 @@ export default function Admin(){
       setTimeout(()=>{ window.location.href = '/' }, 1200)
       return
     }
-    await fetchAll()
-    await loadUsers()
+  await fetchAll()
   }
 
   async function fetchAll(){
@@ -44,14 +40,7 @@ export default function Admin(){
     setTx(data||[])
   }
 
-  async function loadUsers(){
-    try{
-      const resp = await fetch('/api/list-users')
-      const json = await resp.json()
-      if(!resp.ok){ setMsg(`فشل جلب المستخدمين: ${json.error||''}`); return }
-      setUsers(json.users||[])
-    }catch(e){ setMsg('خطأ في جلب المستخدمين') }
-  }
+  // إدارة المستخدمين محذوفة حسب الطلب
 
   async function approveReturnItem(item){
     // وضع علامة تحقق من الأدمن على عنصر مُعاد
@@ -106,75 +95,9 @@ export default function Admin(){
       </div>
       {msg && <div style={{color:'green'}}>{msg}</div>}
 
-      <section style={{padding:'8px 0', borderTop:'1px solid #ddd', marginTop:8}}>
-        <h3>إنشاء حساب موظف / أدمن</h3>
-        <div style={{display:'flex', gap:8, flexWrap:'wrap', alignItems:'center'}}>
-          <input type="email" placeholder="الإيميل" value={newEmail} onChange={e=>setNewEmail(e.target.value)} />
-          <input type="password" placeholder="كلمة السر" value={newPassword} onChange={e=>setNewPassword(e.target.value)} />
-          <label>
-            الدور:
-            <select value={newRole} onChange={e=>setNewRole(e.target.value)}>
-              <option value="employee">موظف</option>
-              <option value="admin">اداري</option>
-            </select>
-          </label>
-          <button onClick={async()=>{
-            setMsg('جارٍ إنشاء المستخدم...')
-            try{
-              const resp = await fetch('/api/create-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: newEmail, password: newPassword, role: newRole })
-              })
-              const json = await resp.json()
-              if(!resp.ok){
-                setMsg(`فشل إنشاء المستخدم: ${json.error || 'خطأ غير معروف'}`)
-              }else{
-                setMsg('تم إنشاء المستخدم بنجاح')
-                setNewEmail(''); setNewPassword(''); setNewRole('employee')
-              }
-            }catch(e){
-              setMsg('حدث خطأ أثناء الاتصال بالخادم')
-            }
-          }}>إنشاء</button>
-        </div>
-        <p style={{fontSize:12, color:'#666'}}>ملاحظة: يتطلب هذا إعداد مفتاح الخدمة في Vercel (SUPABASE_SERVICE_ROLE_KEY).</p>
-      </section>
+      {/* قسم إنشاء حساب موظف/أدمن تمت إزالته */}
 
-      <section style={{padding:'8px 0', borderTop:'1px solid #ddd', marginTop:8}}>
-        <h3>المستخدمون</h3>
-        <button onClick={loadUsers}>تحديث القائمة</button>
-        <ul>
-          {users.map(u=> (
-            <li key={u.id} style={{margin:'6px 0'}}>
-              {u.email} — الدور الحالي: {u.role}
-              <select defaultValue={u.role} onChange={async(e)=>{
-                const role = e.target.value
-                setMsg('جارٍ تحديث الدور...')
-                const resp = await fetch('/api/update-user-role', {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: u.id, role })
-                })
-                const json = await resp.json()
-                if(!resp.ok){ setMsg(`فشل تحديث الدور: ${json.error||''}`) }
-                else { setMsg('تم تحديث الدور'); await loadUsers() }
-              }}>
-                <option value="employee">موظف</option>
-                <option value="admin">اداري</option>
-              </select>
-              <button style={{marginInlineStart:8}} onClick={async()=>{
-                if(!confirm('هل أنت متأكد من حذف المستخدم؟')) return
-                setMsg('جارٍ حذف المستخدم...')
-                const resp = await fetch('/api/delete-user', {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: u.id })
-                })
-                const json = await resp.json()
-                if(!resp.ok){ setMsg(`فشل حذف المستخدم: ${json.error||''}`) }
-                else { setMsg('تم حذف المستخدم'); await loadUsers() }
-              }}>حذف</button>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* قسم إدارة المستخدمين تمت إزالته */}
       <ul>
         {visibleTx.map(t=> (
           <li key={t.id} style={{marginBottom:10}}>

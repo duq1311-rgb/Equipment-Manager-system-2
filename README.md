@@ -17,4 +17,4 @@ npm run dev
 Notes:
 - There's an `supabase.sql` file with table schema you can import into Supabase.
 - Use the Import page to upload an Excel/CSV of equipment (the Excel contains name and quantity columns).
-- Admin users can view all transactions (Supabase Auth + a `role` column in the `users` table is used).
+- Admin users can view all transactions. User creation/role management from the site has been removed as requested.
