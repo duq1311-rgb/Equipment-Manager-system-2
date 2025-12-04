@@ -29,10 +29,20 @@ export default function EquipmentSelector({onChange}){
     onChange && onChange(next.filter(i=>i.selectedQty>0))
   }
 
+  function normalizeCategory(cat){
+    if(!cat) return cat
+    // توحيد التسميات: "عدسات" -> "العدسات"
+    const map = {
+      'عدسات': 'العدسات'
+    }
+    return map[cat] || cat
+  }
+
   function getCategories(list){
     const set = new Set()
     for(const it of list){
-      const cat = it.metadata && (it.metadata.category || it.metadata.Category) || null
+      const raw = it.metadata && (it.metadata.category || it.metadata.Category) || null
+      const cat = normalizeCategory(raw)
       if(cat) set.add(cat)
     }
     return Array.from(set)
@@ -40,7 +50,8 @@ export default function EquipmentSelector({onChange}){
 
   const categories = useMemo(()=> getCategories(items), [items])
   const filteredItems = useMemo(()=> items.filter(it=>{
-    const cat = it.metadata && (it.metadata.category || it.metadata.Category) || null
+    const raw = it.metadata && (it.metadata.category || it.metadata.Category) || null
+    const cat = normalizeCategory(raw)
     return !activeCategory || cat === activeCategory
   }), [items, activeCategory])
 
