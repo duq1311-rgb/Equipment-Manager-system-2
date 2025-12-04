@@ -16,6 +16,7 @@ export default function Admin(){
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [newRole, setNewRole] = useState('employee')
+  const [users, setUsers] = useState([])
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -32,6 +33,7 @@ export default function Admin(){
       return
     }
     await fetchAll()
+    await loadUsers()
   }
 
   async function fetchAll(){
@@ -40,6 +42,15 @@ export default function Admin(){
       .select('*, transaction_items(*, equipment(name))')
       .order('created_at', {ascending:false})
     setTx(data||[])
+  }
+
+  async function loadUsers(){
+    try{
+      const resp = await fetch('/api/list-users')
+      const json = await resp.json()
+      if(!resp.ok){ setMsg(`فشل جلب المستخدمين: ${json.error||''}`); return }
+      setUsers(json.users||[])
+    }catch(e){ setMsg('خطأ في جلب المستخدمين') }
   }
 
   async function approveReturnItem(item){
@@ -128,6 +139,41 @@ export default function Admin(){
           }}>إنشاء</button>
         </div>
         <p style={{fontSize:12, color:'#666'}}>ملاحظة: يتطلب هذا إعداد مفتاح الخدمة في Vercel (SUPABASE_SERVICE_ROLE_KEY).</p>
+      </section>
+
+      <section style={{padding:'8px 0', borderTop:'1px solid #ddd', marginTop:8}}>
+        <h3>المستخدمون</h3>
+        <button onClick={loadUsers}>تحديث القائمة</button>
+        <ul>
+          {users.map(u=> (
+            <li key={u.id} style={{margin:'6px 0'}}>
+              {u.email} — الدور الحالي: {u.role}
+              <select defaultValue={u.role} onChange={async(e)=>{
+                const role = e.target.value
+                setMsg('جارٍ تحديث الدور...')
+                const resp = await fetch('/api/update-user-role', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: u.id, role })
+                })
+                const json = await resp.json()
+                if(!resp.ok){ setMsg(`فشل تحديث الدور: ${json.error||''}`) }
+                else { setMsg('تم تحديث الدور'); await loadUsers() }
+              }}>
+                <option value="employee">موظف</option>
+                <option value="admin">اداري</option>
+              </select>
+              <button style={{marginInlineStart:8}} onClick={async()=>{
+                if(!confirm('هل أنت متأكد من حذف المستخدم؟')) return
+                setMsg('جارٍ حذف المستخدم...')
+                const resp = await fetch('/api/delete-user', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: u.id })
+                })
+                const json = await resp.json()
+                if(!resp.ok){ setMsg(`فشل حذف المستخدم: ${json.error||''}`) }
+                else { setMsg('تم حذف المستخدم'); await loadUsers() }
+              }}>حذف</button>
+            </li>
+          ))}
+        </ul>
       </section>
       <ul>
         {visibleTx.map(t=> (
