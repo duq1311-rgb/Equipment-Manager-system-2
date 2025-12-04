@@ -10,6 +10,7 @@ export default function Checkout(){
   const [selected, setSelected] = useState([])
   const [msg, setMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [refreshTick, setRefreshTick] = useState(0)
 
   async function handleSubmit(e){
     e.preventDefault()
@@ -44,6 +45,8 @@ export default function Checkout(){
     }
 
     setMsg('تم تسجيل اخذ المعدات')
+    // بعد نجاح العملية، حدِّث قائمة المعدات فوراً عبر إعادة الجلب
+    setRefreshTick(t => t + 1)
     // reset
     setProjectName(''); setProjectOwner(''); setSelected([])
     setSubmitting(false)
@@ -70,7 +73,7 @@ export default function Checkout(){
           <input type="datetime-local" value={shootTime} onChange={e=>setShootTime(e.target.value)} />
         </div>
 
-        <EquipmentSelector onChange={setSelected} />
+  <EquipmentSelector onChange={setSelected} refreshTick={refreshTick} />
 
         <button type="submit" disabled={submitting}>تأكيد الاستلام</button>
       </form>

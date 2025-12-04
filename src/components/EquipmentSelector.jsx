@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function EquipmentSelector({onChange}){
+export default function EquipmentSelector({onChange, refreshTick}){
   const [items, setItems] = useState([])
   const [errors, setErrors] = useState({})
   const [activeCategory, setActiveCategory] = useState(null)
 
   useEffect(()=>{ fetchEquip() }, [])
+  // إعادة الجلب عند تغيّر refreshTick القادم من صفحة الاستلام
+  useEffect(()=>{ if(refreshTick>=0) fetchEquip() }, [refreshTick])
 
   async function fetchEquip(){
     const { data } = await supabase.from('equipment').select('*').order('name')
