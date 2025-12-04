@@ -20,7 +20,8 @@ export default function Admin(){
     // حماية صفحة الأدمن عبر UUID
     const { data: userRes } = await supabase.auth.getUser()
     const user = userRes?.user || null
-    const ADMIN_UUID = import.meta.env.VITE_ADMIN_UUID
+    // استخدام قيمة البيئة أو قيمة احتياطية مؤقتة
+    const ADMIN_UUID = import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731'
     if(!user || !ADMIN_UUID || user.id !== ADMIN_UUID){
       setMsg('ليست لديك صلاحية الدخول إلى لوحة المشرف')
       // إعادة توجيه سريع إلى الصفحة الرئيسية
