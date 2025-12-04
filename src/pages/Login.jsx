@@ -24,20 +24,26 @@ export default function Login(){
   }
 
   return (
-    <div>
-      <h2>تسجيل دخول</h2>
+    <section style={{maxWidth:600, margin:'0 auto'}}>
+      <header style={{textAlign:'center', marginBottom:12}}>
+        {/* شعار الشركة */}
+        <img src="/logo.png" alt="Company Logo" style={{width:96, height:96, objectFit:'contain', display:'inline-block'}} />
+        <h2 style={{marginTop:8}}>نظام إدارة المعدات التصويرية</h2>
+        <p style={{color:'#666'}}>Photography Equipment Management System</p>
+      </header>
+
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>البريد الإلكتروني</label>
-          <input value={email} onChange={e=>setEmail(e.target.value)} />
-        </div>
-        <div>
-          <label>كلمة السر</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} />
-        </div>
-        <button type="submit">دخول</button>
+        <label>
+          البريد الإلكتروني / Email
+          <input type="email" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
+        </label>
+        <label>
+          كلمة السر / Password
+          <input type="password" placeholder="•••••••" value={password} onChange={e=>setPassword(e.target.value)} />
+        </label>
+        <button type="submit">تسجيل الدخول / Login</button>
       </form>
-      <div>{msg}</div>
-    </div>
+      {msg && <div style={{marginTop:8, color: msg.includes('خطأ')||msg.includes('error') ? 'red' : 'green'}}>{msg}</div>}
+    </section>
   )
 }
