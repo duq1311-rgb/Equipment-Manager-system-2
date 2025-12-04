@@ -19,16 +19,15 @@ export default function ImportExcel(){
       available_qty: parseInt(r.total_qty || r.qty || r.quantity || r.Count || 0, 10) || 0
     }))
 
-    // Insert rows into equipment table (upsert by name)
+    // Upsert rows into equipment table by name to avoid duplicates
     for(const row of rows){
       if(!row.name) continue
-      // try to find existing
-      const { data: found } = await supabase.from('equipment').select('*').eq('name', row.name).limit(1).maybeSingle()
-      if(found){
-        // update totals and available
-        await supabase.from('equipment').update({ total_qty: row.total_qty, available_qty: row.available_qty }).eq('id', found.id)
-      } else {
-        await supabase.from('equipment').insert(row)
+      try{
+        await supabase
+          .from('equipment')
+          .upsert(row, { onConflict: 'name' })
+      }catch(err){
+        console.warn('Upsert failed for', row.name, err)
       }
     }
 
@@ -40,6 +39,7 @@ export default function ImportExcel(){
       <h2>استيراد إكسل/CSV للمعدات</h2>
       <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} />
       <div>{msg}</div>
+      <p style={{fontSize:12,color:'#666'}}>ملاحظة: لتجنّب التكرار تمت عملية الإدخال بشكل Upsert على الاسم. يُفضّل وجود قيد فريد على عمود name في قاعدة البيانات.</p>
     </div>
   )
 }
