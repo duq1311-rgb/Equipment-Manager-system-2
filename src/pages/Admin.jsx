@@ -105,7 +105,7 @@ export default function Admin(){
                   <div style={{display:'inline-block', marginInlineStart:8}}>
                     حالة التحقق: {it.admin_verified ? 'تم التحقق' : 'بانتظار التحقق'}
                     {!it.admin_verified && (
-                      <button style={{marginInlineStart:8}} onClick={()=>approveReturnItem(it)}>تحقق من العنصر</button>
+                      <button style={{marginInlineStart:8}} onClick={()=>approveReturnItem(it)}>تم التحقق</button>
                     )}
                   </div>
                 </li>
