@@ -41,11 +41,20 @@ export default function Admin(){
 
   async function approveReturnItem(item){
     // وضع علامة تحقق من الأدمن على عنصر مُعاد
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('transaction_items')
       .update({ admin_verified: true })
       .eq('id', item.id)
-    if(error){ setMsg('فشل التحقق من العنصر'); return }
+      .select()
+    if(error){
+      const detail = error?.message || ''
+      // إيضاح محتمل: إذا كان العمود غير موجود
+      const hint = detail.includes('column') && detail.includes('admin_verified')
+        ? 'يبدو أن عمود admin_verified غير موجود. أضف العمود في Supabase: ALTER TABLE public.transaction_items ADD COLUMN admin_verified boolean NOT NULL DEFAULT false;'
+        : ''
+      setMsg(`فشل التحقق من العنصر${detail ? `: ${detail}` : ''}${hint ? ` — ${hint}` : ''}`)
+      return
+    }
     setMsg('تم التحقق من العنصر')
     await fetchAll()
   }
