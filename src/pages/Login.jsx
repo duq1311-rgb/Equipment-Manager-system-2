@@ -28,7 +28,7 @@ export default function Login(){
       <header style={{textAlign:'center', marginBottom:12}}>
         {/* شعار الشركة */}
         <img src="/logo.png" alt="Company Logo" style={{width:96, height:96, objectFit:'contain', display:'inline-block'}} />
-        <h2 style={{marginTop:8}}>نظام إدارة المعدات التصويرية</h2>
+  <h2 style={{marginTop:8}}>نظام ادارة معدات التصوير</h2>
         <p style={{color:'#666'}}>Photography Equipment Management System</p>
       </header>
 
