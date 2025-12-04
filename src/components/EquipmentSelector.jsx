@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { fetchEquipment } from '../lib/api'
 
 export default function EquipmentSelector({onChange, refreshTick}){
   const [items, setItems] = useState([])
@@ -11,7 +11,7 @@ export default function EquipmentSelector({onChange, refreshTick}){
   useEffect(()=>{ if(refreshTick>=0) fetchEquip() }, [refreshTick])
 
   async function fetchEquip(){
-    const { data } = await supabase.from('equipment').select('*').order('name')
+    const data = await fetchEquipment()
     setItems(data || [])
     // set initial category to first available
     const categories = getCategories(data || [])
@@ -43,7 +43,7 @@ export default function EquipmentSelector({onChange, refreshTick}){
   function getCategories(list){
     const set = new Set()
     for(const it of list){
-      const raw = it.metadata && (it.metadata.category || it.metadata.Category) || null
+      const raw = (it.metadata && (it.metadata.category || it.metadata.Category)) || it.category || null
       const cat = normalizeCategory(raw)
       if(cat) set.add(cat)
     }
@@ -52,7 +52,7 @@ export default function EquipmentSelector({onChange, refreshTick}){
 
   const categories = useMemo(()=> getCategories(items), [items])
   const filteredItems = useMemo(()=> items.filter(it=>{
-    const raw = it.metadata && (it.metadata.category || it.metadata.Category) || null
+    const raw = (it.metadata && (it.metadata.category || it.metadata.Category)) || it.category || null
     const cat = normalizeCategory(raw)
     return !activeCategory || cat === activeCategory
   }), [items, activeCategory])

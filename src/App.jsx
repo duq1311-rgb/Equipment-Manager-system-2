@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, Link, useNavigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Checkout from './pages/Checkout'
@@ -11,6 +11,16 @@ import { supabase } from './lib/supabase'
 
 export default function App(){
   const [user, setUser] = useState(null)
+  const nav = useNavigate()
+
+  async function handleLogout(){
+    try{
+      if(supabase.auth && supabase.auth.signOut){
+        await supabase.auth.signOut()
+      }
+    }catch(e){ /* ignore */ }
+    nav('/login')
+  }
 
   useEffect(()=>{
     let mounted = true
@@ -47,6 +57,12 @@ export default function App(){
 
   return (
     <div className="app">
+      <header className="app-topbar">
+        <div className="left">
+          <button className="logout-btn" onClick={handleLogout}>تسجيل الخروج</button>
+        </div>
+        <div className="right" />
+      </header>
       <main>
         <Routes>
           <Route path="/" element={<Home/>} />

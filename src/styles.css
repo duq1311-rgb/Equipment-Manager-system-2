@@ -26,6 +26,14 @@ body{
 }
 .login-header .title{ font-weight: 700 }
 .login-header img{ width: 36px; height: 36px; object-fit: contain }
+/* Dedicated class for the logo to allow future tweaks without affecting other images */
+.login-logo{
+	width: 40px;
+	height: 40px;
+	object-fit: contain;
+	image-rendering: -webkit-optimize-contrast; /* crisper on Chrome */
+	image-rendering: crisp-edges;               /* crisper on some engines */
+}
 
 /* Centered login card */
 .login-wrapper{ display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 80px); }
@@ -44,3 +52,22 @@ button{ border-radius:8px }
 /* Card sections */
 section.card{ background:#fff; border:1px solid #eaecef; border-radius:12px; padding:16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04) }
 section.card h2{ color: var(--brand-primary) }
+
+/* Top bar with logout button (appears at top-left) */
+.app-topbar{
+	position: sticky;
+	top: 0;
+	background: #fff;
+	border-bottom: 1px solid #eaecef;
+	padding: 8px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	z-index: 10;
+}
+.logout-btn{
+	background: var(--brand-primary);
+	color:#fff;
+	padding: 8px 12px;
+	border-radius: 8px;
+}
