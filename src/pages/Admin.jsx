@@ -30,6 +30,9 @@ export default function Admin(){
   const [employeeProjects, setEmployeeProjects] = useState([])
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(true)
   const [isLoadingProjects, setIsLoadingProjects] = useState(false)
+  const [filterFrom, setFilterFrom] = useState('')
+  const [filterTo, setFilterTo] = useState('')
+  const [lastLoadedRange, setLastLoadedRange] = useState({ from: '', to: '' })
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -85,26 +88,151 @@ export default function Admin(){
     return employeeNameMap[id] || id
   }
 
-  async function loadEmployeeProjects(emp){
+  function handleSelectEmployee(emp){
+    if(!emp) return
+    setMsg('')
+    setFilterFrom('')
+    setFilterTo('')
+    setLastLoadedRange({ from: '', to: '' })
+    loadEmployeeProjects(emp, { from: '', to: '' })
+  }
+
+  async function loadEmployeeProjects(emp, options = {}){
+    if(!emp) return
     setIsLoadingProjects(true)
     setSelectedEmployee(emp)
     try{
+      const fromValue = typeof options.from === 'string' ? options.from : filterFrom
+      const toValue = typeof options.to === 'string' ? options.to : filterTo
       const params = new URLSearchParams({ userId: emp.id })
+      if(fromValue) params.append('from', fromValue)
+      if(toValue) params.append('to', toValue)
       const resp = await fetch(`/api/employee-projects?${params.toString()}`)
       const json = await resp.json().catch(()=>({}))
       if(!resp.ok){
         throw new Error(json?.error || 'فشل جلب مشاريع الموظف')
       }
+      setMsg('')
       setEmployeeProjects((json.projects || []).map(project => ({
         ...project,
         assignment_role: project.assignment_role || (project.user_id === emp.id ? 'owner' : 'assistant')
       })))
+      setLastLoadedRange({ from: fromValue || '', to: toValue || '' })
     }catch(error){
       setMsg(`تعذّر جلب مشاريع الموظف: ${error.message}`)
       setEmployeeProjects([])
     }finally{
       setIsLoadingProjects(false)
     }
+  }
+
+  function handleApplyFilters(){
+    if(!selectedEmployee){
+      setMsg('رجاء اختر موظفاً أولاً لعرض سجله.')
+      return
+    }
+    if(filterFrom && filterTo && new Date(filterFrom) > new Date(filterTo)){
+      setMsg('تاريخ البداية يجب أن يسبق تاريخ النهاية.')
+      return
+    }
+    setMsg('')
+    loadEmployeeProjects(selectedEmployee, { from: filterFrom, to: filterTo })
+  }
+
+  function handlePrint(){
+    if(!selectedEmployee){
+      setMsg('اختر موظفاً لطباعة سجله.')
+      return
+    }
+    const printWindow = window.open('', '_blank', 'width=900,height=700')
+    if(!printWindow) return
+
+    const preparedRange = (lastLoadedRange.from || lastLoadedRange.to)
+      ? `الفترة: ${lastLoadedRange.from || 'غير محدد'} → ${lastLoadedRange.to || 'غير محدد'}`
+      : 'الفترة: جميع التواريخ'
+
+    const projectsHtml = employeeProjects.length
+      ? employeeProjects.map(project => {
+        const assistants = Array.isArray(project.assistants) && project.assistants.length
+          ? Array.from(new Set(project.assistants.filter(Boolean))).map(id => `<span class="chip">${getEmployeeName(id)}</span>`).join(' ')
+          : '<span class="chip chip-muted">لا يوجد مساعدين</span>'
+        const items = (project.transaction_items || []).map(item => {
+          const itemName = (item?.equipment && item.equipment.name) || item?.equipment_id || 'معدة'
+          return `<li>${itemName} — كمية: ${item?.qty ?? 0}</li>`
+        }).join('') || '<li>لا توجد معدات مسجلة</li>'
+        const roleLabel = project.assignment_role === 'assistant'
+          ? 'دور الموظف: مساعد'
+          : project.assignment_role === 'owner'
+            ? 'دور الموظف: مسؤول'
+            : ''
+
+        return `
+          <article class="project-card">
+            <header>
+              <div>
+                <h2>${project.project_name || 'مشروع بدون اسم'}</h2>
+                <div class="meta-row">
+                  <span class="chip">${project.project_owner || 'بدون مالك'}</span>
+                  <span class="chip">${statusArabic(project.status)}</span>
+                  ${roleLabel ? `<span class="chip">${roleLabel}</span>` : ''}
+                </div>
+              </div>
+            </header>
+            <section class="assistants">
+              <strong>المساعدون:</strong>
+              <div class="chips">${assistants}</div>
+            </section>
+            <section class="timeline">
+              <div>وقت الاستلام: ${formatDateTime(project.checkout_time)}</div>
+              <div>وقت التصوير: ${formatDateTime(project.shoot_time)}</div>
+              <div>وقت الإرجاع: ${formatDateTime(project.return_time)}</div>
+            </section>
+            <section>
+              <strong>المعدات:</strong>
+              <ul>${items}</ul>
+            </section>
+          </article>
+        `
+      }).join('')
+      : '<p class="empty">لا توجد سجلات ضمن النطاق الحالي.</p>'
+
+    const generatedAt = new Date().toLocaleString('en-US', { hour12: false })
+    const styles = `
+      body{ font-family:'Cairo','Inter',sans-serif; direction:rtl; padding:24px; color:#102044; }
+      h1{ margin-top:0; font-size:1.5rem; }
+      .header-meta{ margin-bottom:18px; color:#5E6A88; }
+      .project-card{ border:1px solid rgba(11,58,130,0.12); border-radius:16px; padding:16px; margin-bottom:16px; }
+      .project-card h2{ margin:0 0 8px; color:#0B3A82; font-size:1.2rem; }
+      .meta-row{ display:flex; flex-wrap:wrap; gap:8px; }
+      .chip{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:#F3F6FE; font-size:0.85rem; }
+      .chip-muted{ background:#f0f0f0; color:#626262; }
+      .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+      ul{ margin:6px 0 0; padding-inline-start:20px; }
+      .timeline{ margin:10px 0; color:#5E6A88; display:grid; gap:4px; font-size:0.92rem; }
+      .empty{ color:#5E6A88; }
+    `
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="ar">
+        <head>
+          <meta charSet="utf-8" />
+          <title>سجل ${selectedEmployee.name}</title>
+          <style>${styles}</style>
+        </head>
+        <body>
+          <h1>سجل العهدة للموظف ${selectedEmployee.name || selectedEmployee.email || selectedEmployee.id}</h1>
+          <div class="header-meta">
+            <div>${preparedRange}</div>
+            <div>تاريخ التحضير: ${generatedAt}</div>
+          </div>
+          ${projectsHtml}
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(()=>{ printWindow.print() }, 150)
   }
 
   return (
@@ -133,7 +261,7 @@ export default function Admin(){
                   <div style={{fontWeight:700}}>{emp.name}</div>
                   <small>عدد المشاريع: {emp.projectsCount}</small>
                 </div>
-                <button type="button" onClick={()=>loadEmployeeProjects(emp)}>عرض التفاصيل</button>
+                <button type="button" onClick={()=>handleSelectEmployee(emp)}>عرض التفاصيل</button>
               </div>
             ))}
           </div>
@@ -143,6 +271,18 @@ export default function Admin(){
       {selectedEmployee && (
         <section className="page-card">
           <h2>مشاريع {selectedEmployee.name}</h2>
+          <div className="filter-bar">
+            <div className="filter-field">
+              <label htmlFor="date-from">من تاريخ</label>
+              <input id="date-from" type="date" value={filterFrom} onChange={e=>setFilterFrom(e.target.value)} />
+            </div>
+            <div className="filter-field">
+              <label htmlFor="date-to">إلى تاريخ</label>
+              <input id="date-to" type="date" value={filterTo} onChange={e=>setFilterTo(e.target.value)} />
+            </div>
+            <button type="button" className="btn-outline" onClick={handleApplyFilters} disabled={isLoadingProjects}>تطبيق الفلتر</button>
+            <button type="button" className="btn-primary" onClick={handlePrint} disabled={isLoadingProjects}>طباعة السجل</button>
+          </div>
           {isLoadingProjects ? (
             <p className="empty-state">جاري تحميل مشاريع الموظف...</p>
           ) : employeeProjects.length === 0 ? (
@@ -166,16 +306,17 @@ export default function Admin(){
 function ProjectItem({ project, getEmployeeName }){
   const [expanded, setExpanded] = useState(false)
   const ownerName = project.user_id ? getEmployeeName(project.user_id) : null
-  const assistantIds = useMemo(()=>{
-    const ids = []
-    if(project.assistant_user_id) ids.push(project.assistant_user_id)
-    if(Array.isArray(project.transaction_assistants)){
-      project.transaction_assistants.forEach(link => {
-        if(link?.assistant_user_id) ids.push(link.assistant_user_id)
-      })
-    }
-    return Array.from(new Set(ids))
-  }, [project])
+  const assistantIdsSet = new Set()
+  if(Array.isArray(project.assistants)){
+    project.assistants.forEach(id => { if(id) assistantIdsSet.add(id) })
+  }
+  if(project.assistant_user_id) assistantIdsSet.add(project.assistant_user_id)
+  if(Array.isArray(project.transaction_assistants)){
+    project.transaction_assistants.forEach(link => {
+      if(link?.assistant_user_id) assistantIdsSet.add(link.assistant_user_id)
+    })
+  }
+  const assistantIds = Array.from(assistantIdsSet)
   const role = project.assignment_role === 'assistant' ? 'دورك: مساعد' : project.assignment_role === 'owner' ? 'دورك: مسؤول' : null
   return (
     <div>
@@ -198,9 +339,9 @@ function ProjectItem({ project, getEmployeeName }){
       </header>
 
       <div className="project-timestamps">
-  <div>وقت الاستلام: {formatDateTime(project.checkout_time)}</div>
-  <div>وقت التصوير: {formatDateTime(project.shoot_time)}</div>
-  <div>وقت الإرجاع: {formatDateTime(project.return_time)}</div>
+        <div>وقت الاستلام: {formatDateTime(project.checkout_time)}</div>
+        <div>وقت التصوير: {formatDateTime(project.shoot_time)}</div>
+        <div>وقت الإرجاع: {formatDateTime(project.return_time)}</div>
       </div>
 
       {expanded && (
