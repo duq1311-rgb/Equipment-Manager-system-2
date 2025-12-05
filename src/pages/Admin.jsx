@@ -151,6 +151,8 @@ export default function Admin(){
       ? `الفترة: ${lastLoadedRange.from || 'غير محدد'} → ${lastLoadedRange.to || 'غير محدد'}`
       : 'الفترة: جميع التواريخ'
 
+    const logoUrl = `${window.location.origin}/logo.png`
+
     const projectsHtml = employeeProjects.length
       ? employeeProjects.map(project => {
         const assistants = Array.isArray(project.assistants) && project.assistants.length
@@ -199,8 +201,11 @@ export default function Admin(){
     const generatedAt = new Date().toLocaleString('en-US', { hour12: false })
     const styles = `
       body{ font-family:'Cairo','Inter',sans-serif; direction:rtl; padding:24px; color:#102044; }
-      h1{ margin-top:0; font-size:1.5rem; }
-      .header-meta{ margin-bottom:18px; color:#5E6A88; }
+      .print-header{ display:flex; align-items:center; gap:18px; margin-bottom:18px; direction:ltr; }
+      .print-logo{ width:80px; height:80px; object-fit:contain; border-radius:18px; background:#fff; box-shadow:0 8px 18px rgba(11,58,130,0.15); padding:10px; }
+      .print-text{ direction:rtl; flex:1; }
+      .print-text h1{ margin:0 0 6px; font-size:1.6rem; color:#0B3A82; }
+      .header-meta{ color:#5E6A88; display:flex; flex-direction:column; gap:4px; }
       .project-card{ border:1px solid rgba(11,58,130,0.12); border-radius:16px; padding:16px; margin-bottom:16px; }
       .project-card h2{ margin:0 0 8px; color:#0B3A82; font-size:1.2rem; }
       .meta-row{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -221,11 +226,16 @@ export default function Admin(){
           <style>${styles}</style>
         </head>
         <body>
-          <h1>سجل العهدة للموظف ${selectedEmployee.name || selectedEmployee.email || selectedEmployee.id}</h1>
-          <div class="header-meta">
-            <div>${preparedRange}</div>
-            <div>تاريخ التحضير: ${generatedAt}</div>
-          </div>
+          <header class="print-header">
+            <img src="${logoUrl}" alt="شعار النظام" class="print-logo" />
+            <div class="print-text">
+              <h1>سجل العهدة للموظف ${selectedEmployee.name || selectedEmployee.email || selectedEmployee.id}</h1>
+              <div class="header-meta">
+                <div>${preparedRange}</div>
+                <div>تاريخ التحضير: ${generatedAt}</div>
+              </div>
+            </div>
+          </header>
           ${projectsHtml}
         </body>
       </html>

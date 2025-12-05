@@ -11,11 +11,11 @@ export default function Login(){
   async function handleSubmit(e){
     e.preventDefault()
     try{
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if(error) setMsg(error.message)
-      else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if(error){
+        setMsg(error.message)
+      }else{
         setMsg('تم تسجيل الدخول')
-        // redirect to home
         navigate('/')
       }
     }catch(err){
@@ -24,32 +24,37 @@ export default function Login(){
   }
 
   return (
-    <div>
-      <div className="login-header">
-        <span className="title">نظام ادارة معدات التصوير</span>
-        <img src="/logo.png" alt="Logo" onError={(e)=>{ e.currentTarget.style.display='none' }} />
-      </div>
-      <div className="login-wrapper">
-        <div className="login-card">
-          <div style={{textAlign:'center'}}>
-            <img src="/logo.png" alt="Logo" style={{width:72, height:72, objectFit:'contain'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
-            <div style={{fontWeight:600, marginTop:6}}>Team Falcons</div>
-          </div>
-
-          <h2>تسجيل الدخول</h2>
-          <form onSubmit={handleSubmit}>
-            <label>
-              اسم المستخدم
-              <input type="email" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
-            </label>
-            <label>
-              كلمة المرور
-              <input type="password" placeholder="•••••••" value={password} onChange={e=>setPassword(e.target.value)} />
-            </label>
-            <button type="submit">دخول</button>
-          </form>
-          {msg && <div style={{marginTop:8, color: msg.includes('خطأ')||msg.includes('error') ? 'red' : 'green'}}>{msg}</div>}
+    <div className="login-wrapper">
+      <div className="login-card">
+        <div className="login-logo-block">
+          <img
+            src="/logo.png"
+            alt="شعار نظام إدارة العهد"
+            className="login-logo"
+            onError={(e)=>{ e.currentTarget.style.display='none' }}
+          />
+          <div className="login-team">Team Falcons</div>
         </div>
+
+        <h2>تسجيل الدخول</h2>
+        <p className="login-subtitle">نظام ادارة معدات التصوير</p>
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <label>
+            اسم المستخدم
+            <input type="email" placeholder="example@email.com" value={email} onChange={e=>setEmail(e.target.value)} />
+          </label>
+          <label>
+            كلمة المرور
+            <input type="password" placeholder="•••••••" value={password} onChange={e=>setPassword(e.target.value)} />
+          </label>
+          <button type="submit">دخول</button>
+        </form>
+        {msg && (
+          <div className={`login-message ${msg.includes('خطأ') || msg.includes('error') ? 'login-message-error' : 'login-message-success'}`}>
+            {msg}
+          </div>
+        )}
       </div>
     </div>
   )

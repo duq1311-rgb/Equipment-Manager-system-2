@@ -13,65 +13,74 @@ import { supabase } from './lib/supabase'
 export default function App(){
   const [user, setUser] = useState(null)
   const nav = useNavigate()
+  const isAuthenticated = !!user
 
   async function handleLogout(){
     try{
-      if(supabase.auth && supabase.auth.signOut){
+      if(supabase.auth?.signOut){
         await supabase.auth.signOut()
       }
-    }catch(e){ /* ignore */ }
+    }catch(_error){ /* ignore */ }
+    setUser(null)
     nav('/login')
   }
 
   useEffect(()=>{
     let mounted = true
-    async function getUser(){
+
+    async function fetchUser(){
       try{
-        const resp = await (supabase.auth && supabase.auth.getUser ? supabase.auth.getUser() : Promise.resolve({ data: { user: null } }))
-        if(mounted && resp && resp.data && resp.data.user) setUser(resp.data.user)
-      }catch(e){
-        // ignore
+        const resp = await (supabase.auth?.getUser ? supabase.auth.getUser() : Promise.resolve({ data: { user: null } }))
+        if(mounted){
+          setUser(resp?.data?.user || null)
+        }
+      }catch(_error){
+        if(mounted) setUser(null)
       }
     }
-    getUser()
-    const sub = (supabase.auth && supabase.auth.onAuthStateChange) ? supabase.auth.onAuthStateChange((event, session)=>{
-      if(session && session.user) setUser(session.user)
-      else setUser(null)
-    }) : null
 
-    return ()=>{ mounted = false; if(sub && sub.data && sub.data.unsubscribe) sub.data.unsubscribe() }
+    fetchUser()
+
+    const sub = supabase.auth?.onAuthStateChange?.((_event, session)=>{
+      setUser(session?.user || null)
+    }) || null
+
+    return ()=>{
+      mounted = false
+      if(sub?.data?.subscription?.unsubscribe) sub.data.subscription.unsubscribe()
+    }
   },[])
-
-  if(!user){
-    // if not logged in, show only login page
-    return (
-      <div className="app">
-        <main>
-          <Routes>
-            <Route path="/login" element={<Login/>} />
-            <Route path="/*" element={<Login/>} />
-          </Routes>
-        </main>
-      </div>
-    )
-  }
 
   return (
     <div className="app">
       <header className="app-topbar">
-        <div className="left">
+        <Link to={isAuthenticated ? '/' : '/login'} className="app-brand">
+          <img src="/logo.png" alt="شعار نظام إدارة العهد" className="app-logo" />
+          <span>نظام إدارة العهد</span>
+        </Link>
+        {isAuthenticated && (
           <button className="logout-btn" onClick={handleLogout}>تسجيل الخروج</button>
-        </div>
-        <div className="right" />
+        )}
       </header>
       <main>
         <Routes>
-          <Route path="/" element={<Home/>} />
-          <Route path="/dashboard" element={<Dashboard/>} />
-          <Route path="/checkout" element={<Checkout/>} />
-          <Route path="/return" element={<ReturnPage/>} />
-          <Route path="/admin" element={<Admin/>} />
-          <Route path="/admin/verify" element={<AdminVerify/>} />
+          {isAuthenticated ? (
+            <>
+              <Route path="/" element={<Home/>} />
+              <Route path="/dashboard" element={<Dashboard/>} />
+              <Route path="/checkout" element={<Checkout/>} />
+              <Route path="/return" element={<ReturnPage/>} />
+              <Route path="/admin" element={<Admin/>} />
+              <Route path="/admin/verify" element={<AdminVerify/>} />
+              <Route path="/login" element={<Home/>} />
+              <Route path="/*" element={<Home/>} />
+            </>
+          ) : (
+            <>
+              <Route path="/login" element={<Login/>} />
+              <Route path="/*" element={<Login/>} />
+            </>
+          )}
           {/* صفحة الاستيراد أزيلت من الموقع */}
         </Routes>
       </main>
