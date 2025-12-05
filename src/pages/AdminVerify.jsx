@@ -146,6 +146,9 @@ export default function AdminVerify(){
                   <strong style={{fontSize:'1.1rem'}}>{t.project_name}</strong>
                   <span style={{color:'var(--text-muted)'}}>صاحب المشروع: {t.project_owner || 'غير محدد'}</span>
                   <span className="chip">الموظف المسؤول: {employeeNameFor(t.user_id)}</span>
+                  {t.assistant_user_id && (
+                    <span className="chip">المساعد: {employeeNameFor(t.assistant_user_id)}</span>
+                  )}
                 </header>
 
                 <div className="project-timestamps">

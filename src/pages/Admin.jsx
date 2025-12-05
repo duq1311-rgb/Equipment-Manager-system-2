@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+
+const ADMIN_ONLY_NAMES = {
+  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي'
+}
 
 function statusArabic(s){
   switch(s){
@@ -65,6 +69,22 @@ export default function Admin(){
     }
   }
 
+  const employeeNameMap = useMemo(()=>{
+    const map = {}
+    employees.forEach(emp => {
+      if(emp?.id) map[emp.id] = emp.name || emp.email || emp.id
+    })
+    Object.entries(ADMIN_ONLY_NAMES).forEach(([id, name]) => {
+      if(!map[id]) map[id] = name
+    })
+    return map
+  }, [employees])
+
+  function getEmployeeName(id){
+    if(!id) return '—'
+    return employeeNameMap[id] || id
+  }
+
   async function loadEmployeeProjects(emp){
     setIsLoadingProjects(true)
     setSelectedEmployee(emp)
@@ -75,7 +95,10 @@ export default function Admin(){
       if(!resp.ok){
         throw new Error(json?.error || 'فشل جلب مشاريع الموظف')
       }
-      setEmployeeProjects(json.projects || [])
+      setEmployeeProjects((json.projects || []).map(project => ({
+        ...project,
+        assignment_role: project.assignment_role || (project.user_id === emp.id ? 'owner' : 'assistant')
+      })))
     }catch(error){
       setMsg(`تعذّر جلب مشاريع الموظف: ${error.message}`)
       setEmployeeProjects([])
@@ -128,7 +151,7 @@ export default function Admin(){
             <div className="projects-list">
               {employeeProjects.map(p => (
                 <div key={p.id} className="project-card">
-                  <ProjectItem project={p} />
+                  <ProjectItem project={p} getEmployeeName={getEmployeeName} />
                 </div>
               ))}
             </div>
@@ -140,8 +163,11 @@ export default function Admin(){
     </div>
   )
 }
-function ProjectItem({ project }){
+function ProjectItem({ project, getEmployeeName }){
   const [expanded, setExpanded] = useState(false)
+  const assistantName = project.assistant_user_id ? getEmployeeName(project.assistant_user_id) : null
+  const ownerName = project.user_id ? getEmployeeName(project.user_id) : null
+  const role = project.assignment_role === 'assistant' ? 'دورك: مساعد' : 'دورك: مسؤول'
   return (
     <div>
       <header style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:16, flexWrap:'wrap'}}>
@@ -150,6 +176,9 @@ function ProjectItem({ project }){
           <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
             <span className="chip">{project.project_owner || 'بدون مالك'}</span>
             <span className="chip">{statusArabic(project.status)}</span>
+            {ownerName && <span className="chip">المسؤول: {ownerName}</span>}
+            {assistantName && <span className="chip">المساعد: {assistantName}</span>}
+            <span className="chip">{role}</span>
           </div>
         </div>
         <button type="button" className="btn-outline" onClick={()=>setExpanded(e=>!e)}>

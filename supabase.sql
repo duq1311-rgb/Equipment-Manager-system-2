@@ -14,6 +14,7 @@ create table if not exists equipment (
 create table if not exists transactions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
+  assistant_user_id uuid references auth.users(id) on delete set null,
   project_name text,
   project_owner text,
   checkout_time timestamptz,
@@ -48,3 +49,6 @@ create table if not exists profiles (
 
 -- NOTE: after creating tables, configure RLS policies according to your desired visibility.
 -- For initial testing you can disable RLS or allow public inserts from anon key but for production configure strict policies.
+
+-- If the transactions table already exists, run this to add the assistant column:
+-- alter table public.transactions add column if not exists assistant_user_id uuid references auth.users(id) on delete set null;

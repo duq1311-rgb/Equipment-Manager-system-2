@@ -20,17 +20,20 @@ export default async function handler(req, res){
   if(!userId) return res.status(400).json({ error: 'userId parameter is required' })
 
   try{
-    const query = supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('transactions')
       .select('*, transaction_items(*, equipment(name))')
+      .or(`user_id.eq.${userId},assistant_user_id.eq.${userId}`)
       .order('created_at', { ascending: false })
-      .eq('user_id', userId)
-
-    const { data, error } = await query
 
     if(error) throw error
 
-    res.status(200).json({ projects: data || [] })
+    const projects = (data || []).map(project => ({
+      ...project,
+      assignment_role: project.user_id === userId ? 'owner' : 'assistant'
+    }))
+
+    res.status(200).json({ projects })
   }catch(error){
     res.status(500).json({ error: error.message || 'Unknown error' })
   }

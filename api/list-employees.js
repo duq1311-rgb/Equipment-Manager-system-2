@@ -25,7 +25,7 @@ export default async function handler(req, res){
   try{
     const [{ data: profiles, error: profilesError }, { data: transactions, error: txError }] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, full_name'),
-      supabaseAdmin.from('transactions').select('user_id')
+      supabaseAdmin.from('transactions').select('user_id, assistant_user_id')
     ])
 
     if(profilesError) throw profilesError
@@ -35,8 +35,12 @@ export default async function handler(req, res){
 
     const countMap = {}
     ;(transactions || []).forEach(row => {
-      if(!row.user_id) return
-      countMap[row.user_id] = (countMap[row.user_id] || 0) + 1
+      if(row.user_id){
+        countMap[row.user_id] = (countMap[row.user_id] || 0) + 1
+      }
+      if(row.assistant_user_id){
+        countMap[row.assistant_user_id] = (countMap[row.assistant_user_id] || 0) + 1
+      }
     })
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p.full_name || '']))

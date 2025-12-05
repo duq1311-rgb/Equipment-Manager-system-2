@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import EquipmentSelector from '../components/EquipmentSelector'
 import { supabase } from '../lib/supabase'
 
@@ -7,10 +7,30 @@ export default function Checkout(){
   const [projectOwner, setProjectOwner] = useState('')
   const [checkoutTime, setCheckoutTime] = useState('')
   const [shootTime, setShootTime] = useState('')
+  const [assistantId, setAssistantId] = useState('')
+  const [employees, setEmployees] = useState([])
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false)
   const [selected, setSelected] = useState([])
   const [msg, setMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [refreshTick, setRefreshTick] = useState(0)
+
+  useEffect(()=>{ fetchEmployees() },[])
+
+  async function fetchEmployees(){
+    setIsLoadingEmployees(true)
+    try{
+      const resp = await fetch('/api/list-employees')
+      const json = await resp.json().catch(()=>({}))
+      if(!resp.ok) throw new Error(json?.error || 'تعذّر تحميل قائمة الموظفين')
+      setEmployees(json.employees || [])
+    }catch(error){
+      setMsg(error.message)
+      setEmployees([])
+    }finally{
+      setIsLoadingEmployees(false)
+    }
+  }
 
   async function handleSubmit(e){
     e.preventDefault()
@@ -34,6 +54,7 @@ export default function Checkout(){
       project_owner: projectOwner,
       checkout_time: checkoutTime || new Date().toISOString(),
       shoot_time: shootTime || null,
+      assistant_user_id: assistantId || null,
       status: 'open',
       user_id: userId
     }]).select().maybeSingle()
@@ -57,7 +78,7 @@ export default function Checkout(){
     // بعد نجاح العملية، حدِّث قائمة المعدات فوراً عبر إعادة الجلب
     setRefreshTick(t => t + 1)
     // reset
-    setProjectName(''); setProjectOwner(''); setSelected([])
+    setProjectName(''); setProjectOwner(''); setSelected([]); setAssistantId('')
     setSubmitting(false)
   }
 
@@ -85,6 +106,16 @@ export default function Checkout(){
           <div className="form-row">
             <label>وقت التصوير (تقديري)</label>
             <input type="datetime-local" value={shootTime} onChange={e=>setShootTime(e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label>المساعد</label>
+            <select value={assistantId} onChange={e=>setAssistantId(e.target.value)} disabled={isLoadingEmployees}>
+              <option value="">لا يوجد</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name || emp.email || emp.id}</option>
+              ))}
+            </select>
+            {isLoadingEmployees && <small>جاري تحميل الأسماء...</small>}
           </div>
 
           <div className="form-row full-width">
