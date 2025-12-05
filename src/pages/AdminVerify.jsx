@@ -49,7 +49,7 @@ export default function AdminVerify(){
   async function fetchAll(){
     const { data } = await supabase
       .from('transactions')
-      .select('*, transaction_items(*, equipment(name))')
+      .select('*, transaction_items(*, equipment(name)), transaction_assistants(assistant_user_id)')
       .order('created_at', {ascending:false})
     setTx(data||[])
   }
@@ -80,9 +80,9 @@ export default function AdminVerify(){
 
   function employeeNameFor(userId){
     if(!userId) return '—'
-  if(ADMIN_ONLY_NAMES[userId]) return ADMIN_ONLY_NAMES[userId]
-  const emp = employeeDirectory[userId]
-  return emp?.name || emp?.email || userId
+    if(ADMIN_ONLY_NAMES[userId]) return ADMIN_ONLY_NAMES[userId]
+    const emp = employeeDirectory[userId]
+    return emp?.name || emp?.email || userId
   }
 
   async function approveReturnItem(item){
@@ -146,9 +146,12 @@ export default function AdminVerify(){
                   <strong style={{fontSize:'1.1rem'}}>{t.project_name}</strong>
                   <span style={{color:'var(--text-muted)'}}>صاحب المشروع: {t.project_owner || 'غير محدد'}</span>
                   <span className="chip">الموظف المسؤول: {employeeNameFor(t.user_id)}</span>
-                  {t.assistant_user_id && (
-                    <span className="chip">المساعد: {employeeNameFor(t.assistant_user_id)}</span>
-                  )}
+                  {Array.from(new Set([
+                    ...(t.assistant_user_id ? [t.assistant_user_id] : []),
+                    ...((t.transaction_assistants || []).map(link => link.assistant_user_id).filter(Boolean))
+                  ])).map(assistantId => (
+                    <span key={`${t.id}-${assistantId}`} className="chip">المساعد: {employeeNameFor(assistantId)}</span>
+                  ))}
                 </header>
 
                 <div className="project-timestamps">

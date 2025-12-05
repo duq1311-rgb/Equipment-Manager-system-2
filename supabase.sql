@@ -37,6 +37,13 @@ create table if not exists transaction_items (
   lost_notes text
 );
 
+create table if not exists transaction_assistants (
+  transaction_id uuid references transactions(id) on delete cascade,
+  assistant_user_id uuid references auth.users(id) on delete cascade,
+  created_at timestamptz default now(),
+  primary key (transaction_id, assistant_user_id)
+);
+
 -- optionally: a users table to store role (admin/user) if you want to mirror auth.users
 -- but Supabase's auth.users exists; you can add a profiles table
 create table if not exists profiles (
@@ -52,3 +59,12 @@ create table if not exists profiles (
 
 -- If the transactions table already exists, run this to add the assistant column:
 -- alter table public.transactions add column if not exists assistant_user_id uuid references auth.users(id) on delete set null;
+
+-- Table for multiple assistants
+-- create table if not exists public.transaction_assistants (
+--   transaction_id uuid references public.transactions(id) on delete cascade,
+--   assistant_user_id uuid references auth.users(id) on delete cascade,
+--   created_at timestamptz default now(),
+--   primary key (transaction_id, assistant_user_id)
+-- );
+

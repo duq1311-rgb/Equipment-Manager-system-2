@@ -22,16 +22,28 @@ export default async function handler(req, res){
   try{
     const { data, error } = await supabaseAdmin
       .from('transactions')
-      .select('*, transaction_items(*, equipment(name))')
-      .or(`user_id.eq.${userId},assistant_user_id.eq.${userId}`)
+      .select('*, transaction_items(*, equipment(name)), transaction_assistants(assistant_user_id)')
+      .or(`user_id.eq.${userId},transaction_assistants.assistant_user_id.eq.${userId},assistant_user_id.eq.${userId}`)
       .order('created_at', { ascending: false })
 
     if(error) throw error
 
-    const projects = (data || []).map(project => ({
-      ...project,
-      assignment_role: project.user_id === userId ? 'owner' : 'assistant'
-    }))
+    const projects = (data || []).map(project => {
+      const assistantIds = []
+      if(project.assistant_user_id) assistantIds.push(project.assistant_user_id)
+      if(Array.isArray(project.transaction_assistants)){
+        project.transaction_assistants.forEach(link => {
+          if(link?.assistant_user_id) assistantIds.push(link.assistant_user_id)
+        })
+      }
+      const uniqueAssistants = Array.from(new Set(assistantIds))
+      const assignmentRole = project.user_id === userId ? 'owner' : uniqueAssistants.includes(userId) ? 'assistant' : 'other'
+      return {
+        ...project,
+        assistants: uniqueAssistants,
+        assignment_role: assignmentRole
+      }
+    })
 
     res.status(200).json({ projects })
   }catch(error){

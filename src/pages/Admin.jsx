@@ -165,9 +165,18 @@ export default function Admin(){
 }
 function ProjectItem({ project, getEmployeeName }){
   const [expanded, setExpanded] = useState(false)
-  const assistantName = project.assistant_user_id ? getEmployeeName(project.assistant_user_id) : null
   const ownerName = project.user_id ? getEmployeeName(project.user_id) : null
-  const role = project.assignment_role === 'assistant' ? 'دورك: مساعد' : 'دورك: مسؤول'
+  const assistantIds = useMemo(()=>{
+    const ids = []
+    if(project.assistant_user_id) ids.push(project.assistant_user_id)
+    if(Array.isArray(project.transaction_assistants)){
+      project.transaction_assistants.forEach(link => {
+        if(link?.assistant_user_id) ids.push(link.assistant_user_id)
+      })
+    }
+    return Array.from(new Set(ids))
+  }, [project])
+  const role = project.assignment_role === 'assistant' ? 'دورك: مساعد' : project.assignment_role === 'owner' ? 'دورك: مسؤول' : null
   return (
     <div>
       <header style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:16, flexWrap:'wrap'}}>
@@ -177,8 +186,10 @@ function ProjectItem({ project, getEmployeeName }){
             <span className="chip">{project.project_owner || 'بدون مالك'}</span>
             <span className="chip">{statusArabic(project.status)}</span>
             {ownerName && <span className="chip">المسؤول: {ownerName}</span>}
-            {assistantName && <span className="chip">المساعد: {assistantName}</span>}
-            <span className="chip">{role}</span>
+            {assistantIds.map(id => (
+              <span key={`${project.id}-assistant-${id}`} className="chip">المساعد: {getEmployeeName(id)}</span>
+            ))}
+            {role && <span className="chip">{role}</span>}
           </div>
         </div>
         <button type="button" className="btn-outline" onClick={()=>setExpanded(e=>!e)}>

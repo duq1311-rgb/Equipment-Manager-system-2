@@ -7,7 +7,7 @@ export default function Checkout(){
   const [projectOwner, setProjectOwner] = useState('')
   const [checkoutTime, setCheckoutTime] = useState('')
   const [shootTime, setShootTime] = useState('')
-  const [assistantId, setAssistantId] = useState('')
+  const [assistants, setAssistants] = useState([''])
   const [employees, setEmployees] = useState([])
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false)
   const [selected, setSelected] = useState([])
@@ -43,16 +43,34 @@ export default function Checkout(){
     }
   }
 
-  function getAssistantName(){
-    if(!assistantId) return ''
-    const assistant = employees.find(emp => emp.id === assistantId)
-    return assistant ? (assistant.name || assistant.email || assistant.id) : assistantId
+  function resolveAssistantName(id){
+    if(!id) return ''
+    const assistant = employees.find(emp => emp.id === id)
+    return assistant ? (assistant.name || assistant.email || assistant.id) : id
+  }
+
+  function handleAssistantChange(index, value){
+    setAssistants(prev => prev.map((id, i) => i === index ? value : id))
+  }
+
+  function addAssistantField(){
+    setAssistants(prev => [...prev, ''])
+  }
+
+  function removeAssistantField(index){
+    setAssistants(prev => prev.filter((_, i) => i !== index))
   }
 
   function validateForm(){
     if(selected.length===0){ setMsg('اختر معدات على الاقل'); return false }
     const invalid = selected.find(it => Number(it.selectedQty)>Number(it.available_qty))
     if(invalid){ setMsg(`لا يمكن اختيار كمية أكبر من المتاح للمعدة: ${invalid.name}`); return false }
+    const chosenAssistants = assistants.map(a => (a || '').trim()).filter(Boolean)
+    const uniqueAssistants = Array.from(new Set(chosenAssistants))
+    if(chosenAssistants.length !== uniqueAssistants.length){
+      setMsg('لا يمكن اختيار نفس المساعد أكثر من مرة')
+      return false
+    }
     return true
   }
 
@@ -63,7 +81,10 @@ export default function Checkout(){
 
     const checkoutIso = checkoutTime || new Date().toISOString()
     const shootIso = shootTime || null
-    const assistantName = getAssistantName()
+    const assistantEntries = Array.from(new Set(assistants.map(a => (a || '').trim()))).filter(Boolean).map(id => ({
+      id,
+      name: resolveAssistantName(id)
+    }))
     const summaryItems = selected.map(it => ({
       id: it.id,
       name: it.name,
@@ -76,8 +97,7 @@ export default function Checkout(){
       projectOwner,
       checkoutIso,
       shootIso,
-      assistantId: assistantId || null,
-      assistantName,
+      assistants: assistantEntries,
       items: summaryItems
     })
     setShowConfirm(true)
@@ -100,7 +120,7 @@ export default function Checkout(){
       project_owner: pendingSummary.projectOwner,
       checkout_time: pendingSummary.checkoutIso,
       shoot_time: pendingSummary.shootIso,
-      assistant_user_id: pendingSummary.assistantId,
+      assistant_user_id: pendingSummary.assistants?.[0]?.id || null,
       status: 'open',
       user_id: userId
     }]).select().maybeSingle()
@@ -124,13 +144,23 @@ export default function Checkout(){
       await supabase.from('equipment').update({ available_qty: newAvail }).eq('id', it.id)
     }
 
+    if(pendingSummary.assistants && pendingSummary.assistants.length){
+      const assistantRows = pendingSummary.assistants.map(({ id }) => ({ transaction_id: tx.id, assistant_user_id: id }))
+      const { error: assistantsError } = await supabase.from('transaction_assistants').insert(assistantRows)
+      if(assistantsError){
+        setMsg(`تم تسجيل العهدة لكن فشل حفظ المساعدين: ${assistantsError.message}`)
+        setSubmitting(false)
+        return
+      }
+    }
+
     setMsg('✅ تم تسجيل اخذ المعدات')
     setShowConfirm(false)
     setPendingSummary(null)
     // بعد نجاح العملية، حدِّث قائمة المعدات فوراً عبر إعادة الجلب
     setRefreshTick(t => t + 1)
     // reset
-    setProjectName(''); setProjectOwner(''); setSelected([]); setAssistantId(''); setCheckoutTime(''); setShootTime('')
+    setProjectName(''); setProjectOwner(''); setSelected([]); setAssistants(['']); setCheckoutTime(''); setShootTime('')
     setSubmitting(false)
   }
 
@@ -166,12 +196,20 @@ export default function Checkout(){
           </div>
           <div className="form-row">
             <label>المساعد</label>
-            <select value={assistantId} onChange={e=>setAssistantId(e.target.value)} disabled={isLoadingEmployees}>
-              <option value="">لا يوجد</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.name || emp.email || emp.id}</option>
-              ))}
-            </select>
+            {assistants.map((value, index) => (
+              <div key={index} className="assistant-row">
+                <select value={value} onChange={e=>handleAssistantChange(index, e.target.value)} disabled={isLoadingEmployees}>
+                  <option value="">لا يوجد</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name || emp.email || emp.id}</option>
+                  ))}
+                </select>
+                {index>0 && (
+                  <button type="button" className="btn-outline" onClick={()=>removeAssistantField(index)} disabled={isLoadingEmployees}>حذف</button>
+                )}
+              </div>
+            ))}
+            <button type="button" className="btn-outline assistant-add" onClick={addAssistantField} disabled={isLoadingEmployees}>إضافة مساعد آخر</button>
             {isLoadingEmployees && <small>جاري تحميل الأسماء...</small>}
           </div>
 
@@ -200,7 +238,14 @@ export default function Checkout(){
                 <div><strong>صاحب المشروع:</strong> {pendingSummary.projectOwner || '—'}</div>
                 <div><strong>وقت الاستلام:</strong> {formatDateTimeDisplay(pendingSummary.checkoutIso)}</div>
                 <div><strong>وقت التصوير:</strong> {pendingSummary.shootIso ? formatDateTimeDisplay(pendingSummary.shootIso) : '—'}</div>
-                <div><strong>المساعد:</strong> {pendingSummary.assistantName || 'لا يوجد'}</div>
+                <div><strong>المساعدون:</strong> {pendingSummary.assistants.length ? '' : 'لا يوجد'}</div>
+                {pendingSummary.assistants.length > 0 && (
+                  <ul style={{margin:'8px 0 0', paddingInlineStart:22}}>
+                    {pendingSummary.assistants.map(({id, name}) => (
+                      <li key={id}>{name}</li>
+                    ))}
+                  </ul>
+                )}
               </section>
               <section>
                 <strong>المعدات المختارة</strong>

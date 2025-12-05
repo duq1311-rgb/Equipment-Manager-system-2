@@ -366,6 +366,11 @@ input:focus, select:focus, textarea:focus{
 
 .modal-actions{ display: flex; justify-content: flex-end; gap: 12px; }
 
+.assistant-row{ display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+.assistant-row select{ flex:1; }
+.assistant-row .btn-outline{ padding:10px 14px; }
+.assistant-add{ margin-top:4px; }
+
 @media (max-width: 768px){
 	main{ padding: 24px 16px 48px; gap:24px; }
 	.page-card, .page-hero{ padding:22px; border-radius:20px; }
