@@ -31,14 +31,21 @@ export default function Home(){
   },[])
 
   return (
-    <div>
-      <h2>مرحباً {displayName || ''}</h2>
-      <p>اختر الإجراء:</p>
-      <div style={{display:'flex', gap:12}}>
-        <button onClick={()=>nav('/checkout')} style={{padding:12}}>استلام عهدة</button>
-        <button onClick={()=>nav('/return')} style={{padding:12}}>تسليم العهدة</button>
-        <button onClick={()=>nav('/admin')} style={{padding:12}}>لوحة المشرف</button>
-      </div>
+    <div className="page-container">
+      <section className="page-hero">
+        <h1>مرحباً {displayName || 'فريق فالكنز'}</h1>
+        <p>ابدأ عملك اليومي من هنا: اختر ما إذا كنت ستستلم العهدة أو تعيدها أو تدير فرقك.</p>
+      </section>
+
+      <section className="page-card">
+        <h2>الإجراءات السريعة</h2>
+        <p style={{color:'var(--text-muted)'}}>اختر المسار المناسب لعملك الحالي:</p>
+        <div className="home-actions">
+          <button type="button" onClick={()=>nav('/checkout')}>استلام عهدة</button>
+          <button type="button" onClick={()=>nav('/return')}>تسليم العهدة</button>
+          <button type="button" onClick={()=>nav('/admin')}>لوحة المشرف</button>
+        </div>
+      </section>
     </div>
   )
 }

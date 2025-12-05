@@ -109,52 +109,66 @@ export default function AdminVerify(){
   }, [tx, showOnlyPending])
 
   return (
-    <div>
-      <h2>التحقق من العهدة المُعادة</h2>
-      <div style={{marginBottom:8}}>
-        <label>
+    <div className="page-container">
+      <section className="page-hero">
+        <h1>التحقق من العهدة</h1>
+        <p>راجع العهدة المُعادة، ووافق على العناصر المستلمة، ثم أغلق المهمة عند اكتمالها.</p>
+        <label style={{display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.18)', padding:'10px 16px', borderRadius:12}}>
           <input type="checkbox" checked={showOnlyPending} onChange={e=>setShowOnlyPending(e.target.checked)} />
-          عرض “العهد قيد التحقق” فقط
+          <span>عرض العهد التي تحتاج للتحقق فقط</span>
         </label>
-      </div>
-      {isLoadingDirectory && <div style={{color:'#555'}}>جاري تحميل أسماء الموظفين...</div>}
-      {msg && <div style={{color:'green'}}>{msg}</div>}
-      <ul>
-        {visibleTx.map(t=> (
-          <li key={t.id} style={{marginBottom:10}}>
-            <div>
-              <strong>{t.project_name}</strong> — {t.project_owner} — {statusArabic(t.status)}
-              <div style={{marginTop:4, color:'#0B3A82'}}>الموظف المسؤول: {employeeNameFor(t.user_id)}</div>
-              <div style={{marginTop:4, lineHeight:1.6}}>
-                <div>وقت الاستلام: {formatDateTime(t.checkout_time)}</div>
-                <div>وقت التصوير: {formatDateTime(t.shoot_time)}</div>
-                <div>وقت الإرجاع: {formatDateTime(t.return_time)}</div>
+      </section>
+
+      <section className="page-card">
+        <h2>العهد المُعادة</h2>
+        {msg && <div className="form-message">{msg}</div>}
+        {isLoadingDirectory && <p className="empty-state">جاري تحميل أسماء الموظفين...</p>}
+        {visibleTx.length === 0 ? (
+          <p className="empty-state">لا توجد عهد قيد المعالجة حالياً.</p>
+        ) : (
+          <div className="verify-list">
+            {visibleTx.map(t=> (
+              <div key={t.id} className="verify-item">
+                <header>
+                  <strong style={{fontSize:'1.1rem'}}>{t.project_name}</strong>
+                  <span style={{color:'var(--text-muted)'}}>صاحب المشروع: {t.project_owner || 'غير محدد'}</span>
+                  <span className="chip">الموظف المسؤول: {employeeNameFor(t.user_id)}</span>
+                </header>
+
+                <div className="project-timestamps">
+                  <div>وقت الاستلام: {formatDateTime(t.checkout_time)}</div>
+                  <div>وقت التصوير: {formatDateTime(t.shoot_time)}</div>
+                  <div>وقت الإرجاع: {formatDateTime(t.return_time)}</div>
+                </div>
+
+                <div className="equipment-items" style={{marginTop:14}}>
+                  {(t.transaction_items||[]).map(it=> (
+                    <div key={it.id} className="equipment-row" style={{flexWrap:'wrap'}}>
+                      <div style={{flex:1, fontWeight:600}}>{(it.equipment && it.equipment.name) || it.equipment_id}</div>
+                      <span className="chip">كمية: {it.qty}</span>
+                      <span className="chip">الحالة: {it.admin_verified ? 'تم التحقق' : 'بانتظار'}</span>
+                      {!it.admin_verified && (
+                        <button type="button" className="btn-primary" style={{padding:'8px 14px'}} onClick={()=>approveReturnItem(it)}>تمييز كمستلم</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {t.status==='open' && (
+                  <footer>
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={()=>finalizeTransactionIfAllVerified(t)}
+                      disabled={(t.transaction_items||[]).some(it=>!it.admin_verified)}
+                    >إغلاق العهدة بعد التحقق</button>
+                  </footer>
+                )}
               </div>
-            </div>
-            <ul>
-              {(t.transaction_items||[]).map(it=> (
-                <li key={it.id}>
-                  {(it.equipment && it.equipment.name) || it.equipment_id} — كمية: {it.qty}
-                  <div style={{display:'inline-block', marginInlineStart:8}}>
-                    حالة التحقق: {it.admin_verified ? 'تم التحقق' : 'بانتظار التحقق'}
-                    {!it.admin_verified && (
-                      <button style={{marginInlineStart:8}} onClick={()=>approveReturnItem(it)}>تم التحقق</button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-            {t.status==='open' && (
-              <div style={{marginTop:6}}>
-                <button
-                  onClick={()=>finalizeTransactionIfAllVerified(t)}
-                  disabled={(t.transaction_items||[]).some(it=>!it.admin_verified)}
-                >إغلاق العهدة بعد التحقق</button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

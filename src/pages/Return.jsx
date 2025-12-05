@@ -42,79 +42,96 @@ export default function ReturnPage(){
   }
 
   return (
-    <div>
-      <h2>تسليم العهدة</h2>
-      <div>
-        <label>العهد المفتوحة</label>
-        <ul>
-          {openTx.map(tx=> (
-            <li key={tx.id}><button onClick={()=>loadItems(tx.id)}>{tx.project_name} — {tx.project_owner}</button></li>
-          ))}
-        </ul>
-      </div>
+    <div className="page-container">
+      <section className="page-hero">
+        <h1>تسليم العهدة</h1>
+        <p>اختر العهدة المفتوحة، راجع العناصر، ثم وثّق حالة الإرجاع قبل إغلاقها.</p>
+      </section>
+
+      <section className="page-card">
+        <h2>العهد المفتوحة</h2>
+        {openTx.length === 0 ? (
+          <p className="empty-state">لا توجد عهد مفتوحة في الوقت الحالي.</p>
+        ) : (
+          <div className="list-tiles">
+            {openTx.map(tx=> (
+              <div key={tx.id} className="list-tile">
+                <div>
+                  <div style={{fontWeight:700}}>{tx.project_name}</div>
+                  <small>صاحب المشروع: {tx.project_owner || '—'}</small>
+                </div>
+                <button type="button" onClick={()=>loadItems(tx.id)}>عرض التفاصيل</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {selectedTx && (
-        <div>
-          <h3>تفاصيل التسليم</h3>
-          {selectedTx.items.map(it=> (
-            <div key={it.id} className="equipment-row">
-              <div style={{width:24}}>
-                <input type="checkbox" checked={!!it.include} onChange={e=>{
-                  const val = !!e.target.checked
-                  setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, include: val}: x)}))
-                }} />
+        <section className="page-card">
+          <h2>تفاصيل الإرجاع</h2>
+          <div className="equipment-items">
+            {selectedTx.items.map(it=> (
+              <div key={it.id} className="equipment-row" style={{flexWrap:'wrap'}}>
+                <div style={{display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', flex:1}}>
+                  <input type="checkbox" checked={!!it.include} onChange={e=>{
+                    const val = !!e.target.checked
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, include: val}: x)}))
+                  }} />
+                  <strong>{it.equipment.name}</strong>
+                  <span className="chip">المستلم: {it.qty}</span>
+                </div>
+
+                <div className="form-row" style={{minWidth:'160px'}}>
+                  <label>كمية راجعة</label>
+                  <input type="number" min="0" max={it.qty} value={it.returnedQty} onChange={e=>{
+                    const v = Math.max(0, Number(e.target.value))
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, returnedQty: v}: x)}))
+                  }} />
+                </div>
+
+                <div className="form-row" style={{minWidth:'160px'}}>
+                  <label>حالة الأضرار</label>
+                  <select value={it.damaged? 'yes':'no'} onChange={e=>{
+                    const val = e.target.value === 'yes'
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, damaged: val}: x)}))
+                  }}>
+                    <option value="no">لا</option>
+                    <option value="yes">نعم</option>
+                  </select>
+                </div>
+                {it.damaged && (
+                  <input style={{flexBasis:'100%'}} placeholder="وصف الأضرار" value={it.damage_notes||''} onChange={e=>{
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, damage_notes: e.target.value}: x)}))
+                  }} />
+                )}
+
+                <div className="form-row" style={{minWidth:'160px'}}>
+                  <label>هل فقد شيء؟</label>
+                  <select value={it.lost? 'yes':'no'} onChange={e=>{
+                    const val = e.target.value === 'yes'
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, lost: val}: x)}))
+                  }}>
+                    <option value="no">لا</option>
+                    <option value="yes">نعم</option>
+                  </select>
+                </div>
+                {it.lost && (
+                  <input style={{flexBasis:'100%'}} placeholder="ما المفقودات" value={it.lost_notes||''} onChange={e=>{
+                    setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, lost_notes: e.target.value}: x)}))
+                  }} />
+                )}
               </div>
-              <div style={{flex:1}}>{it.equipment.name} — أخذ: {it.qty}</div>
-              <label>كمية راجعة</label>
-              <input type="number" min="0" max={it.qty} value={it.returnedQty} onChange={e=>{
-                const v = Math.max(0, Number(e.target.value))
-                setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, returnedQty: v}: x)}))
-              }} />
-              <label>هل بها أضرار؟</label>
-              <select value={it.damaged? 'yes':'no'} onChange={e=>{
-                const val = e.target.value === 'yes'
-                setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, damaged: val}: x)}))
-              }}>
-                <option value="no">لا</option>
-                <option value="yes">نعم</option>
-              </select>
-              {it.damaged && (
-                <input placeholder="وصف الاضرار" value={it.damage_notes||''} onChange={e=>{
-                  setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, damage_notes: e.target.value}: x)}))
-                }} />
-              )}
-
-              <label>هل فقد شيء؟</label>
-              <select value={it.lost? 'yes':'no'} onChange={e=>{
-                const val = e.target.value === 'yes'
-                setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, lost: val}: x)}))
-              }}>
-                <option value="no">لا</option>
-                <option value="yes">نعم</option>
-              </select>
-              {it.lost && (
-                <input placeholder="ما المفقودات" value={it.lost_notes||''} onChange={e=>{
-                  setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, lost_notes: e.target.value}: x)}))
-                }} />
-              )}
-            </div>
-          ))}
-
-          <div>
-            <label>موعد انتهاء التصوير</label>
-            <input type="datetime-local" />
+            ))}
           </div>
 
-          <div>
-            <label>موعد تسليم العهدة</label>
-            <input type="datetime-local" />
+          <div className="form-actions" style={{marginTop:16}}>
+            <button className="btn-primary" type="button" onClick={confirmReturn}>تأكيد التسليم</button>
           </div>
-
-          <button onClick={confirmReturn}>تأكيد التسليم</button>
-        </div>
+        </section>
       )}
 
-      <div>{msg}</div>
+      {msg && <div className="form-message">{msg}</div>}
     </div>
   )
 }

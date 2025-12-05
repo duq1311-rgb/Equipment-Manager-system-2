@@ -82,54 +82,58 @@ export default function Admin(){
   }
 
   return (
-    <div>
-      <h2>لوحة المشرف</h2>
-      <div style={{marginBottom:12, display:'flex', gap:8}}>
-        <Link to="/admin/verify" style={{textDecoration:'none'}}>
-          <button type="button">الانتقال إلى صفحة التحقق من العهدة</button>
-        </Link>
-      </div>
-      {msg && <div style={{color:'green'}}>{msg}</div>}
+    <div className="page-container">
+      <section className="page-hero">
+        <h1>لوحة المشرف</h1>
+        <p>إدارة الموظفين ومتابعة جميع المشاريع المسجلة لحظياً.</p>
+        <div className="page-hero-actions">
+          <Link to="/admin/verify" style={{textDecoration:'none'}}>
+            <button type="button" className="btn-secondary">الانتقال إلى التحقق من العهدة</button>
+          </Link>
+        </div>
+      </section>
 
-      <section style={{padding:'8px 0', borderTop:'1px solid #ddd'}}>
-        <h3>الموظفين</h3>
+      <section className="page-card">
+        <h2>الموظفون</h2>
         {isLoadingEmployees ? (
-          <p>جاري تحميل بيانات الموظفين...</p>
+          <p className="empty-state">جاري تحميل بيانات الموظفين...</p>
         ) : employees.length === 0 ? (
-          <p>لا يوجد موظفون مسجلون حالياً.</p>
+          <p className="empty-state">لا يوجد موظفون مسجلون حالياً.</p>
         ) : (
-          <ul>
+          <div className="list-tiles">
             {employees.map(emp => (
-              <li key={emp.id} style={{margin:'6px 0'}}>
-                <button style={{background:'transparent', color:'#0B3A82'}} onClick={()=>loadEmployeeProjects(emp)}>
-                  {emp.name}
-                </button>
-                {' '}— عدد المشاريع المسجلة: {emp.projectsCount}
-              </li>
+              <div key={emp.id} className="list-tile">
+                <div>
+                  <div style={{fontWeight:700}}>{emp.name}</div>
+                  <small>عدد المشاريع: {emp.projectsCount}</small>
+                </div>
+                <button type="button" onClick={()=>loadEmployeeProjects(emp)}>عرض التفاصيل</button>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
       {selectedEmployee && (
-        <section style={{padding:'8px 0', borderTop:'1px solid #ddd', marginTop:8}}>
-          <h3>مشاريع الموظف: {selectedEmployee.name}</h3>
+        <section className="page-card">
+          <h2>مشاريع {selectedEmployee.name}</h2>
           {isLoadingProjects ? (
-            <p>جاري تحميل مشاريع الموظف...</p>
+            <p className="empty-state">جاري تحميل مشاريع الموظف...</p>
           ) : employeeProjects.length === 0 ? (
-            <p>لم يتم تسجيل مشاريع لهذا الموظف بعد.</p>
+            <p className="empty-state">لم يتم تسجيل مشاريع لهذا الموظف بعد.</p>
           ) : (
-            <ul>
+            <div className="projects-list">
               {employeeProjects.map(p => (
-                <li key={p.id} style={{marginBottom:8}}>
+                <div key={p.id} className="project-card">
                   <ProjectItem project={p} />
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </section>
       )}
-      {/* تمت إزالة قائمة التحقق من هذه الصفحة ونُقلت إلى /admin/verify */}
+
+      {msg && <div className="form-message">{msg}</div>}
     </div>
   )
 }
@@ -137,24 +141,34 @@ function ProjectItem({ project }){
   const [expanded, setExpanded] = useState(false)
   return (
     <div>
-      <div>
-        <button style={{background:'transparent', color:'#0B3A82'}} onClick={()=>setExpanded(e=>!e)}>
-          {project.project_name || 'مشروع'} — {project.project_owner || ''} — {statusArabic(project.status)}
+      <header style={{display:'flex', justifyContent:'space-between', alignItems:'center', gap:16, flexWrap:'wrap'}}>
+        <div>
+          <h4 style={{margin:'0 0 4px'}}>{project.project_name || 'مشروع بدون اسم'}</h4>
+          <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+            <span className="chip">{project.project_owner || 'بدون مالك'}</span>
+            <span className="chip">{statusArabic(project.status)}</span>
+          </div>
+        </div>
+        <button type="button" className="btn-outline" onClick={()=>setExpanded(e=>!e)}>
+          {expanded ? 'إخفاء المعدات' : 'عرض المعدات'}
         </button>
-      </div>
-      <div style={{marginTop:4, lineHeight:1.6}}>
+      </header>
+
+      <div className="project-timestamps">
         <div>وقت الاستلام: {formatDateTime(project.checkout_time)}</div>
         <div>وقت التصوير: {formatDateTime(project.shoot_time)}</div>
         <div>وقت الإرجاع: {formatDateTime(project.return_time)}</div>
       </div>
+
       {expanded && (
-        <ul style={{marginTop:6}}>
+        <div className="equipment-items" style={{marginTop:12}}>
           {(project.transaction_items||[]).map(it=> (
-            <li key={it.id}>
-              {(it.equipment && it.equipment.name) || it.equipment_id} — كمية: {it.qty}
-            </li>
+            <div key={it.id} className="equipment-row" style={{boxShadow:'none', background:'rgba(241,245,255,0.7)'}}>
+              <div style={{flex:1}}>{(it.equipment && it.equipment.name) || it.equipment_id}</div>
+              <span className="chip">كمية: {it.qty}</span>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )

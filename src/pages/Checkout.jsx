@@ -62,31 +62,45 @@ export default function Checkout(){
   }
 
   return (
-    <div>
-      <h2>استلام عهدة</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>اسم المشروع</label>
-          <input value={projectName} onChange={e=>setProjectName(e.target.value)} />
-        </div>
-        <div>
-          <label>اسم صاحب المشروع</label>
-          <input value={projectOwner} onChange={e=>setProjectOwner(e.target.value)} />
-        </div>
-        <div>
-          <label>وقت استلام العهدة</label>
-          <input type="datetime-local" value={checkoutTime} onChange={e=>setCheckoutTime(e.target.value)} />
-        </div>
-        <div>
-          <label>وقت التصوير (تقديري)</label>
-          <input type="datetime-local" value={shootTime} onChange={e=>setShootTime(e.target.value)} />
-        </div>
+    <div className="page-container">
+      <section className="page-hero">
+        <h1>استلام العهدة</h1>
+        <p>أدخل تفاصيل المشروع وحدد المعدات المطلوبة لكل فريق قبل الخروج من المستودع.</p>
+      </section>
 
-  <EquipmentSelector onChange={setSelected} refreshTick={refreshTick} />
+      <section className="page-card">
+        <form className="form-grid two-columns" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label>اسم المشروع</label>
+            <input value={projectName} onChange={e=>setProjectName(e.target.value)} placeholder="مشروع التصوير" />
+          </div>
+          <div className="form-row">
+            <label>اسم صاحب المشروع</label>
+            <input value={projectOwner} onChange={e=>setProjectOwner(e.target.value)} placeholder="اسم العميل" />
+          </div>
+          <div className="form-row">
+            <label>وقت استلام العهدة</label>
+            <input type="datetime-local" value={checkoutTime} onChange={e=>setCheckoutTime(e.target.value)} />
+          </div>
+          <div className="form-row">
+            <label>وقت التصوير (تقديري)</label>
+            <input type="datetime-local" value={shootTime} onChange={e=>setShootTime(e.target.value)} />
+          </div>
 
-        <button type="submit" disabled={submitting}>تأكيد الاستلام</button>
-      </form>
-      <div>{msg}</div>
+          <div className="form-row full-width">
+            <label>المعدات المطلوبة</label>
+            <small>اختَر الفئة ثم حدد الكمية لكل معدة قبل الإرسال.</small>
+            <EquipmentSelector onChange={setSelected} refreshTick={refreshTick} />
+          </div>
+
+          <div className="form-row full-width">
+            <div className="form-actions">
+              <button className="btn-primary" type="submit" disabled={submitting}>تأكيد الاستلام</button>
+            </div>
+          </div>
+        </form>
+        {msg && <div className="form-message">{msg}</div>}
+      </section>
     </div>
   )
 }

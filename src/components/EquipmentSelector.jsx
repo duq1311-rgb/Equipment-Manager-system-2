@@ -57,43 +57,52 @@ export default function EquipmentSelector({onChange, refreshTick}){
     return !activeCategory || cat === activeCategory
   }), [items, activeCategory])
 
+  const hasCategories = categories.length > 0
+
   return (
-    <div>
-      <p>اختر الفئة أولاً:</p>
-      <div style={{display:'flex', gap:8, flexWrap:'wrap', marginBottom:8}}>
-        {categories.map(cat => (
-          <button
-            type="button"
-            key={cat}
-            onClick={()=>setActiveCategory(cat)}
-            style={{
-              padding:'8px 12px',
-              border:'1px solid #ccc',
-              borderRadius:6,
-              background: activeCategory===cat ? '#eee' : '#fff'
-            }}
-          >{cat}</button>
-        ))}
-      </div>
+    <div className="equipment-selector">
+      {hasCategories ? (
+        <>
+          <div className="category-toolbar">
+            {categories.map(cat => (
+              <button
+                type="button"
+                key={cat}
+                className={`category-pill ${activeCategory===cat? 'active':''}`}
+                onClick={()=>setActiveCategory(cat)}
+              >{cat}</button>
+            ))}
+          </div>
 
-      <p>المعدات ضمن الفئة: <strong>{activeCategory || 'الكل'}</strong></p>
-      {filteredItems.map(it=> (
-        <div className="equipment-row" key={it.id}>
-          <div style={{flex:1}}>{it.name} — متوفر: {it.available_qty}</div>
-          <input type="number" min="0" max={it.available_qty} value={it.selectedQty||0}
-            onChange={e=>setQty(it.id, Math.max(0, Number(e.target.value))) } />
-          {errors[it.id] && <span style={{color:'red', marginInlineStart:8}}>{errors[it.id]}</span>}
-        </div>
-      ))}
+          <p style={{margin:0, color:'var(--text-muted)'}}>المعدات ضمن الفئة: <strong style={{color:'var(--brand-primary)'}}>{activeCategory || 'الكل'}</strong></p>
 
-      <div style={{marginTop:10}}>
-        <button type="button" onClick={()=>{
-          // choose next category if exists
-          const idx = categories.findIndex(c=>c===activeCategory)
-          const nextCat = categories[(idx+1) % (categories.length||1)]
-          setActiveCategory(nextCat)
-        }}>إضافة معدات من فئة أخرى</button>
-      </div>
+          <div className="equipment-list">
+            {filteredItems.map(it=> (
+              <div className="equipment-row" key={it.id}>
+                <div style={{flex:1, fontWeight:600}}>{it.name}</div>
+                <div className="chip">متوفر: {it.available_qty}</div>
+                <input type="number" min="0" max={it.available_qty} value={it.selectedQty||0}
+                  onChange={e=>setQty(it.id, Math.max(0, Number(e.target.value))) } />
+                {errors[it.id] && <span style={{color:'#D14343', fontSize:'0.85rem'}}>{errors[it.id]}</span>}
+              </div>
+            ))}
+          </div>
+
+          {categories.length>1 && (
+            <button
+              type="button"
+              className="equipment-add-btn"
+              onClick={()=>{
+                const idx = categories.findIndex(c=>c===activeCategory)
+                const nextCat = categories[(idx+1) % (categories.length||1)]
+                setActiveCategory(nextCat)
+              }}
+            >إضافة معدات من فئة أخرى</button>
+          )}
+        </>
+      ) : (
+        <div className="section-subtle">لا توجد معدات متاحة حالياً.</div>
+      )}
     </div>
   )
 }
