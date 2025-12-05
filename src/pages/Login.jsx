@@ -32,7 +32,7 @@ export default function Login(){
       <div className="login-wrapper">
         <div className="login-card">
           <div style={{textAlign:'center'}}>
-            <img src="/logo.png" alt="Logo" style={{width:48, height:48, objectFit:'contain'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
+            <img src="/logo.png" alt="Logo" style={{width:72, height:72, objectFit:'contain'}} onError={(e)=>{ e.currentTarget.style.display='none' }} />
             <div style={{fontWeight:600, marginTop:6}}>Team Falcons</div>
           </div>
 

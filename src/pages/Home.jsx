@@ -34,7 +34,7 @@ export default function Home(){
     <div className="page-container">
       <section className="page-hero">
         <h1>مرحباً {displayName || 'فريق فالكنز'}</h1>
-        <p>ابدأ عملك اليومي من هنا: اختر ما إذا كنت ستستلم العهدة أو تعيدها أو تدير فرقك.</p>
+  <p>ابدأ عملك اليومي من هنا: اختر ما إذا كنت ستستلم العهدة أو تعيدها أو تدير فرقك وغيرها. إنَّ اللهَ تعالى يُحِبُّ إذا عمِلَ أحدُكمْ عملًا أنْ يُتقِنَهُ.</p>
       </section>
 
       <section className="page-card">
