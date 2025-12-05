@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { formatNumberArabic } from '../lib/locale'
 
 export default function ReturnPage(){
   const [openTx, setOpenTx] = useState([])
@@ -80,7 +79,7 @@ export default function ReturnPage(){
                     setSelectedTx(s=> ({...s, items: s.items.map(x=> x.id===it.id?{...x, include: val}: x)}))
                   }} />
                   <strong>{it.equipment.name}</strong>
-                  <span className="chip">المستلم: {formatNumberArabic(it.qty)}</span>
+                  <span className="chip">المستلم: {it.qty}</span>
                 </div>
 
                 <div className="form-row" style={{minWidth:'160px'}}>

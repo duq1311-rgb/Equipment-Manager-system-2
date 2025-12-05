@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { formatDateTimeArabic, formatNumberArabic } from '../lib/locale'
 
 function statusArabic(s){
   switch(s){
     case 'open': return 'عهدة مفتوحة'
     case 'closed': return 'عهدة مسلّمة'
     default: return s || ''
+  }
+}
+
+function formatDateTime(value){
+  if(!value) return '—'
+  try{
+    return new Date(value).toLocaleString('en-US', { hour12: false })
+  }catch(_){
+    return value
   }
 }
 
@@ -97,7 +105,7 @@ export default function Admin(){
               <div key={emp.id} className="list-tile">
                 <div>
                   <div style={{fontWeight:700}}>{emp.name}</div>
-                  <small>عدد المشاريع: {formatNumberArabic(emp.projectsCount)}</small>
+                  <small>عدد المشاريع: {emp.projectsCount}</small>
                 </div>
                 <button type="button" onClick={()=>loadEmployeeProjects(emp)}>عرض التفاصيل</button>
               </div>
@@ -147,9 +155,9 @@ function ProjectItem({ project }){
       </header>
 
       <div className="project-timestamps">
-  <div>وقت الاستلام: {formatDateTimeArabic(project.checkout_time)}</div>
-  <div>وقت التصوير: {formatDateTimeArabic(project.shoot_time)}</div>
-  <div>وقت الإرجاع: {formatDateTimeArabic(project.return_time)}</div>
+  <div>وقت الاستلام: {formatDateTime(project.checkout_time)}</div>
+  <div>وقت التصوير: {formatDateTime(project.shoot_time)}</div>
+  <div>وقت الإرجاع: {formatDateTime(project.return_time)}</div>
       </div>
 
       {expanded && (
@@ -157,7 +165,7 @@ function ProjectItem({ project }){
           {(project.transaction_items||[]).map(it=> (
             <div key={it.id} className="equipment-row" style={{boxShadow:'none', background:'rgba(241,245,255,0.7)'}}>
               <div style={{flex:1}}>{(it.equipment && it.equipment.name) || it.equipment_id}</div>
-              <span className="chip">كمية: {formatNumberArabic(it.qty)}</span>
+              <span className="chip">كمية: {it.qty}</span>
             </div>
           ))}
         </div>
