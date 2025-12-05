@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
+const ADMIN_ONLY_NAMES = {
+  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي'
+}
+
 function statusArabic(s){
   switch(s){
     case 'open': return 'عهدة مفتوحة'
@@ -60,6 +64,11 @@ export default function AdminVerify(){
       ;(json.employees||[]).forEach(emp => {
         map[emp.id] = emp
       })
+      Object.entries(ADMIN_ONLY_NAMES).forEach(([id, name]) => {
+        if(!map[id]){
+          map[id] = { id, name, email: '', projectsCount: 0 }
+        }
+      })
       setEmployeeDirectory(map)
     }catch(error){
       setMsg(`تعذّر تحميل أسماء الموظفين: ${error.message}`)
@@ -71,8 +80,9 @@ export default function AdminVerify(){
 
   function employeeNameFor(userId){
     if(!userId) return '—'
-    const emp = employeeDirectory[userId]
-    return emp?.name || emp?.email || userId
+  if(ADMIN_ONLY_NAMES[userId]) return ADMIN_ONLY_NAMES[userId]
+  const emp = employeeDirectory[userId]
+  return emp?.name || emp?.email || userId
   }
 
   async function approveReturnItem(item){

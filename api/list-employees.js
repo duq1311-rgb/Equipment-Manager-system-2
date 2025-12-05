@@ -7,6 +7,12 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
   ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   : null
 
+const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || '85975a3c-e601-4c66-bed1-42ad6e953873')
+  .split(',')
+  .map(id => id.trim())
+  .filter(Boolean)
+const ADMIN_ONLY_SET = new Set(ADMIN_ONLY_UUIDS)
+
 export default async function handler(req, res){
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
   if(!supabaseAdmin){
@@ -70,6 +76,7 @@ export default async function handler(req, res){
     })
 
     const employees = Array.from(employeeMap.values())
+      .filter(emp => !ADMIN_ONLY_SET.has(emp.id))
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
 
     res.status(200).json({ employees })
