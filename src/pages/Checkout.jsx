@@ -20,13 +20,22 @@ export default function Checkout(){
     if(invalid){ setMsg(`لا يمكن اختيار كمية أكبر من المتاح للمعدة: ${invalid.name}`); return }
     setSubmitting(true)
 
+    const { data: userRes } = await supabase.auth.getUser()
+    const userId = userRes?.user?.id || null
+    if(!userId){
+      setMsg('يجب تسجيل الدخول قبل إنشاء العهدة')
+      setSubmitting(false)
+      return
+    }
+
     // Create transaction
     const { data: tx, error: txErr } = await supabase.from('transactions').insert([{
       project_name: projectName,
       project_owner: projectOwner,
       checkout_time: checkoutTime || new Date().toISOString(),
       shoot_time: shootTime || null,
-      status: 'open'
+      status: 'open',
+      user_id: userId
     }]).select().maybeSingle()
 
   if(txErr || !tx){ setMsg('خطأ في انشاء الطلب'); setSubmitting(false); return }

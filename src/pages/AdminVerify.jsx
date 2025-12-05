@@ -9,10 +9,21 @@ function statusArabic(s){
   }
 }
 
+function formatDateTime(value){
+  if(!value) return '—'
+  try{
+    return new Date(value).toLocaleString('ar-SA', { hour12: false })
+  }catch(_){
+    return value
+  }
+}
+
 export default function AdminVerify(){
   const [tx, setTx] = useState([])
   const [msg, setMsg] = useState('')
   const [showOnlyPending, setShowOnlyPending] = useState(true)
+  const [employeeDirectory, setEmployeeDirectory] = useState({})
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(true)
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -25,7 +36,7 @@ export default function AdminVerify(){
       setTimeout(()=>{ window.location.href = '/' }, 1200)
       return
     }
-    await fetchAll()
+    await Promise.all([loadEmployeeDirectory(), fetchAll()])
   }
 
   async function fetchAll(){
@@ -34,6 +45,31 @@ export default function AdminVerify(){
       .select('*, transaction_items(*, equipment(name))')
       .order('created_at', {ascending:false})
     setTx(data||[])
+  }
+
+  async function loadEmployeeDirectory(){
+    setIsLoadingDirectory(true)
+    try{
+      const resp = await fetch('/api/list-employees')
+      const json = await resp.json().catch(()=>({}))
+      if(!resp.ok) throw new Error(json?.error || 'فشل جلب معلومات الموظفين')
+      const map = {}
+      ;(json.employees||[]).forEach(emp => {
+        map[emp.id] = emp
+      })
+      setEmployeeDirectory(map)
+    }catch(error){
+      setMsg(`تعذّر تحميل أسماء الموظفين: ${error.message}`)
+      setEmployeeDirectory({})
+    }finally{
+      setIsLoadingDirectory(false)
+    }
+  }
+
+  function employeeNameFor(userId){
+    if(!userId) return '—'
+    const emp = employeeDirectory[userId]
+    return emp?.name || emp?.email || userId
   }
 
   async function approveReturnItem(item){
@@ -81,12 +117,19 @@ export default function AdminVerify(){
           عرض “العهد قيد التحقق” فقط
         </label>
       </div>
+      {isLoadingDirectory && <div style={{color:'#555'}}>جاري تحميل أسماء الموظفين...</div>}
       {msg && <div style={{color:'green'}}>{msg}</div>}
       <ul>
         {visibleTx.map(t=> (
           <li key={t.id} style={{marginBottom:10}}>
             <div>
               <strong>{t.project_name}</strong> — {t.project_owner} — {statusArabic(t.status)}
+              <div style={{marginTop:4, color:'#0B3A82'}}>الموظف المسؤول: {employeeNameFor(t.user_id)}</div>
+              <div style={{marginTop:4, lineHeight:1.6}}>
+                <div>وقت الاستلام: {formatDateTime(t.checkout_time)}</div>
+                <div>وقت التصوير: {formatDateTime(t.shoot_time)}</div>
+                <div>وقت الإرجاع: {formatDateTime(t.return_time)}</div>
+              </div>
             </div>
             <ul>
               {(t.transaction_items||[]).map(it=> (
