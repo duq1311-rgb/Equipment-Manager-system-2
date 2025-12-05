@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 
 export default function EquipmentSelector({onChange, refreshTick}){
   const [items, setItems] = useState([])
-  const [errors, setErrors] = useState({})
   const [activeCategory, setActiveCategory] = useState(null)
 
   useEffect(()=>{ fetchEquip() }, [])
@@ -21,13 +20,10 @@ export default function EquipmentSelector({onChange, refreshTick}){
   function setQty(id, qty){
     const next = items.map(it => {
       if(it.id !== id) return it
-      const validQty = Math.max(0, Math.min(Number(qty||0), Number(it.available_qty||0)))
-      return { ...it, selectedQty: validQty }
+      const bounded = Math.max(0, Math.min(Number(qty||0), Number(it.available_qty||0)))
+      return { ...it, selectedQty: bounded }
     })
     setItems(next)
-    // validation: track error if user typed > available
-    const changed = next.find(it=>it.id===id)
-    setErrors(prev => ({ ...prev, [id]: (changed && Number(changed.selectedQty) > Number(changed.available_qty)) ? 'لا يمكن اختيار كمية أكبر من المتاح' : '' }))
     onChange && onChange(next.filter(i=>i.selectedQty>0))
   }
 
@@ -81,9 +77,14 @@ export default function EquipmentSelector({onChange, refreshTick}){
               <div className="equipment-row" key={it.id}>
                 <div style={{flex:1, fontWeight:600}}>{it.name}</div>
                 <div className="chip">متوفر: {it.available_qty}</div>
-                <input type="number" min="0" max={it.available_qty} value={it.selectedQty||0}
-                  onChange={e=>setQty(it.id, Math.max(0, Number(e.target.value))) } />
-                {errors[it.id] && <span style={{color:'#D14343', fontSize:'0.85rem'}}>{errors[it.id]}</span>}
+                <select
+                  value={it.selectedQty || 0}
+                  onChange={e=>setQty(it.id, Number(e.target.value))}
+                >
+                  {Array.from({ length: Number(it.available_qty || 0) + 1 }).map((_, idx)=>(
+                    <option key={idx} value={idx}>{idx}</option>
+                  ))}
+                </select>
               </div>
             ))}
           </div>
