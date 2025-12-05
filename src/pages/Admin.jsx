@@ -34,8 +34,11 @@ export default function Admin(){
     const { data: userRes } = await supabase.auth.getUser()
     const user = userRes?.user || null
     // استخدام قيمة البيئة أو قيمة احتياطية مؤقتة
-    const ADMIN_UUID = import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731'
-    if(!user || !ADMIN_UUID || user.id !== ADMIN_UUID){
+    const ADMIN_UUIDS = (import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731,85975a3c-e601-4c66-bed1-42ad6e953873')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean)
+    if(!user || ADMIN_UUIDS.length===0 || !ADMIN_UUIDS.includes(user.id)){
       setMsg('ليست لديك صلاحية الدخول إلى لوحة المشرف')
       // إعادة توجيه سريع إلى الصفحة الرئيسية
       setTimeout(()=>{ window.location.href = '/' }, 1200)
