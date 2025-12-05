@@ -53,16 +53,16 @@ export default function App(){
 
   return (
     <div className="app">
-      <header className="app-topbar">
-        <Link to={isAuthenticated ? '/' : '/login'} className="app-brand">
-          <img src="/logo.png" alt="شعار نظام إدارة العهد" className="app-logo" />
-          <span>نظام إدارة العهد</span>
-        </Link>
-        {isAuthenticated && (
+      {isAuthenticated && (
+        <header className="app-topbar">
+          <Link to="/" className="app-brand">
+            <img src="/logo.png" alt="شعار نظام إدارة العهد" className="app-logo" />
+            <span>نظام إدارة العهد</span>
+          </Link>
           <button className="logout-btn" onClick={handleLogout}>تسجيل الخروج</button>
-        )}
-      </header>
-      <main>
+        </header>
+      )}
+      <main className={isAuthenticated ? 'with-topbar' : ''}>
         <Routes>
           {isAuthenticated ? (
             <>

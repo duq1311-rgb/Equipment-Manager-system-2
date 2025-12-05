@@ -13,6 +13,7 @@
 	--text-strong: #102044;
 	--text-muted: #5E6A88;
 	--border-soft: rgba(11, 58, 130, 0.08);
+	--topbar-height: 96px;
 }
 
 html{ direction: rtl }
@@ -37,6 +38,10 @@ main{
 	display: flex;
 	flex-direction: column;
 	gap: 32px;
+}
+
+main.with-topbar{
+	padding-top: calc(var(--topbar-height) + 32px);
 }
 
 .page-container{
@@ -387,8 +392,10 @@ input:focus, select:focus, textarea:focus{
 
 .filter-field input{ min-width:160px; }
 
+
 @media (max-width: 768px){
 	main{ padding: 24px 16px 48px; gap:24px; }
+	main.with-topbar{ padding-top: calc(var(--topbar-height) + 24px); }
 	.page-card, .page-hero{ padding:22px; border-radius:20px; }
 	.equipment-row{ flex-wrap:wrap; }
 	.form-actions{ flex-direction:column; align-items:stretch; }
@@ -454,11 +461,18 @@ section.card h2{ color: var(--brand-primary) }
 
 /* Updated branding for header and login */
 .app-topbar{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	width: 100%;
 	background: rgba(255,255,255,0.95);
 	border-bottom: 1px solid rgba(16,32,68,0.08);
 	padding: 12px 28px;
 	gap: 16px;
 	direction: ltr;
+	box-shadow: 0 18px 35px rgba(15,35,95,0.08);
+	z-index: 120;
 }
 
 .app-brand{
@@ -496,7 +510,7 @@ section.card h2{ color: var(--brand-primary) }
 }
 
 .login-wrapper{
-	min-height: calc(100vh - 120px);
+	min-height: calc(100vh - 80px);
 }
 
 .login-card{
