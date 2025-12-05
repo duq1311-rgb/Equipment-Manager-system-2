@@ -14,6 +14,8 @@ export default function Checkout(){
   const [msg, setMsg] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [refreshTick, setRefreshTick] = useState(0)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [pendingSummary, setPendingSummary] = useState(null)
 
   useEffect(()=>{ fetchEmployees() },[])
 
@@ -32,12 +34,57 @@ export default function Checkout(){
     }
   }
 
-  async function handleSubmit(e){
-    e.preventDefault()
-    if(selected.length===0){ setMsg('اختر معدات على الاقل'); return }
-    // block if any qty exceeds available (defensive)
+  function formatDateTimeDisplay(value){
+    if(!value) return '—'
+    try{
+      return new Date(value).toLocaleString('en-US', { hour12: false })
+    }catch(_){
+      return value
+    }
+  }
+
+  function getAssistantName(){
+    if(!assistantId) return ''
+    const assistant = employees.find(emp => emp.id === assistantId)
+    return assistant ? (assistant.name || assistant.email || assistant.id) : assistantId
+  }
+
+  function validateForm(){
+    if(selected.length===0){ setMsg('اختر معدات على الاقل'); return false }
     const invalid = selected.find(it => Number(it.selectedQty)>Number(it.available_qty))
-    if(invalid){ setMsg(`لا يمكن اختيار كمية أكبر من المتاح للمعدة: ${invalid.name}`); return }
+    if(invalid){ setMsg(`لا يمكن اختيار كمية أكبر من المتاح للمعدة: ${invalid.name}`); return false }
+    return true
+  }
+
+  function handleSubmit(e){
+    e.preventDefault()
+    setMsg('')
+    if(!validateForm()) return
+
+    const checkoutIso = checkoutTime || new Date().toISOString()
+    const shootIso = shootTime || null
+    const assistantName = getAssistantName()
+    const summaryItems = selected.map(it => ({
+      id: it.id,
+      name: it.name,
+      selectedQty: it.selectedQty,
+      available_qty: it.available_qty
+    }))
+
+    setPendingSummary({
+      projectName,
+      projectOwner,
+      checkoutIso,
+      shootIso,
+      assistantId: assistantId || null,
+      assistantName,
+      items: summaryItems
+    })
+    setShowConfirm(true)
+  }
+
+  async function handleConfirm(){
+    if(!pendingSummary) return
     setSubmitting(true)
 
     const { data: userRes } = await supabase.auth.getUser()
@@ -48,21 +95,24 @@ export default function Checkout(){
       return
     }
 
-    // Create transaction
     const { data: tx, error: txErr } = await supabase.from('transactions').insert([{
-      project_name: projectName,
-      project_owner: projectOwner,
-      checkout_time: checkoutTime || new Date().toISOString(),
-      shoot_time: shootTime || null,
-      assistant_user_id: assistantId || null,
+      project_name: pendingSummary.projectName,
+      project_owner: pendingSummary.projectOwner,
+      checkout_time: pendingSummary.checkoutIso,
+      shoot_time: pendingSummary.shootIso,
+      assistant_user_id: pendingSummary.assistantId,
       status: 'open',
       user_id: userId
     }]).select().maybeSingle()
 
-  if(txErr || !tx){ setMsg('خطأ في انشاء الطلب'); setSubmitting(false); return }
+  if(txErr || !tx){
+      setMsg('خطأ في انشاء الطلب')
+      setSubmitting(false)
+      return
+    }
 
     // insert items and decrement available_qty
-    for(const it of selected){
+    for(const it of pendingSummary.items){
       if(!it.selectedQty) continue
       await supabase.from('transaction_items').insert({
         transaction_id: tx.id,
@@ -74,12 +124,19 @@ export default function Checkout(){
       await supabase.from('equipment').update({ available_qty: newAvail }).eq('id', it.id)
     }
 
-    setMsg('تم تسجيل اخذ المعدات')
+    setMsg('✅ تم تسجيل اخذ المعدات')
+    setShowConfirm(false)
+    setPendingSummary(null)
     // بعد نجاح العملية، حدِّث قائمة المعدات فوراً عبر إعادة الجلب
     setRefreshTick(t => t + 1)
     // reset
-    setProjectName(''); setProjectOwner(''); setSelected([]); setAssistantId('')
+    setProjectName(''); setProjectOwner(''); setSelected([]); setAssistantId(''); setCheckoutTime(''); setShootTime('')
     setSubmitting(false)
+  }
+
+  function handleCancelConfirm(){
+    setShowConfirm(false)
+    setPendingSummary(null)
   }
 
   return (
@@ -132,6 +189,39 @@ export default function Checkout(){
         </form>
         {msg && <div className="form-message">{msg}</div>}
       </section>
+
+      {showConfirm && pendingSummary && (
+        <div className="modal-backdrop">
+          <div className="modal-card">
+            <h3>مراجعة تفاصيل العهدة</h3>
+            <div className="modal-summary">
+              <section>
+                <div><strong>اسم المشروع:</strong> {pendingSummary.projectName || '—'}</div>
+                <div><strong>صاحب المشروع:</strong> {pendingSummary.projectOwner || '—'}</div>
+                <div><strong>وقت الاستلام:</strong> {formatDateTimeDisplay(pendingSummary.checkoutIso)}</div>
+                <div><strong>وقت التصوير:</strong> {pendingSummary.shootIso ? formatDateTimeDisplay(pendingSummary.shootIso) : '—'}</div>
+                <div><strong>المساعد:</strong> {pendingSummary.assistantName || 'لا يوجد'}</div>
+              </section>
+              <section>
+                <strong>المعدات المختارة</strong>
+                {pendingSummary.items.length === 0 ? (
+                  <p className="empty-state" style={{marginTop:8}}>لا توجد معدات محددة.</p>
+                ) : (
+                  <ul style={{margin:'8px 0 0', paddingInlineStart:22}}>
+                    {pendingSummary.items.map(item => (
+                      <li key={item.id}>{item.name} — الكمية: {item.selectedQty}</li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-outline" onClick={handleCancelConfirm} disabled={submitting}>إلغاء</button>
+              <button type="button" className="btn-primary" onClick={handleConfirm} disabled={submitting}>تأكيد</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
