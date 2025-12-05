@@ -66,12 +66,7 @@ export default function Admin(){
     setIsLoadingProjects(true)
     setSelectedEmployee(emp)
     try{
-      const params = new URLSearchParams()
-      if(emp.lookupType === 'owner'){
-        params.append('owner', emp.lookupValue || emp.name || '')
-      }else{
-        params.append('userId', emp.lookupValue || emp.id)
-      }
+      const params = new URLSearchParams({ userId: emp.id })
       const resp = await fetch(`/api/employee-projects?${params.toString()}`)
       const json = await resp.json().catch(()=>({}))
       if(!resp.ok){

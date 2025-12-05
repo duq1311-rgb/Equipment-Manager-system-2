@@ -16,20 +16,15 @@ export default async function handler(req, res){
     return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
   }
 
-  const { userId, owner } = req.query || {}
-  if(!userId && !owner) return res.status(400).json({ error: 'userId or owner parameter is required' })
+  const { userId } = req.query || {}
+  if(!userId) return res.status(400).json({ error: 'userId parameter is required' })
 
   try{
     const query = supabaseAdmin
       .from('transactions')
       .select('*, transaction_items(*, equipment(name))')
       .order('created_at', { ascending: false })
-
-    if(userId){
-      query.eq('user_id', userId)
-    }else{
-      query.ilike('project_owner', owner)
-    }
+      .eq('user_id', userId)
 
     const { data, error } = await query
 

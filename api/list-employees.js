@@ -19,7 +19,7 @@ export default async function handler(req, res){
   try{
     const [{ data: profiles, error: profilesError }, { data: transactions, error: txError }] = await Promise.all([
       supabaseAdmin.from('profiles').select('id, full_name'),
-      supabaseAdmin.from('transactions').select('user_id, project_owner')
+      supabaseAdmin.from('transactions').select('user_id')
     ])
 
     if(profilesError) throw profilesError
@@ -28,18 +28,9 @@ export default async function handler(req, res){
     const authUsers = await fetchAllUsers()
 
     const countMap = {}
-    const ownerCountMap = new Map()
     ;(transactions || []).forEach(row => {
-      const ownerName = (row.project_owner || '').trim()
-      if(row.user_id){
-        countMap[row.user_id] = (countMap[row.user_id] || 0) + 1
-        return
-      }
-      if(!ownerName) return
-      const key = ownerName.toLowerCase()
-      const current = ownerCountMap.get(key) || { name: ownerName, count: 0 }
-      current.count += 1
-      ownerCountMap.set(key, current)
+      if(!row.user_id) return
+      countMap[row.user_id] = (countMap[row.user_id] || 0) + 1
     })
 
   const profileMap = new Map((profiles || []).map(p => [p.id, p.full_name || '']))
@@ -52,8 +43,6 @@ export default async function handler(req, res){
         email: user.email || '',
         name: profileMap.get(user.id) || user.user_metadata?.full_name || user.email || user.id,
         projectsCount: countMap[user.id] || 0,
-        lookupType: 'user',
-        lookupValue: user.id,
       })
     })
 
@@ -64,8 +53,6 @@ export default async function handler(req, res){
         email: '',
         name: fullName || id,
         projectsCount: countMap[id] || 0,
-        lookupType: 'user',
-        lookupValue: id,
       })
     })
 
@@ -79,27 +66,11 @@ export default async function handler(req, res){
         email: '',
         name: id,
         projectsCount,
-        lookupType: 'user',
-        lookupValue: id,
       })
     })
 
     const employees = Array.from(employeeMap.values())
-    const existingNames = new Set(employees.map(emp => (emp.name || '').toLowerCase()))
-
-    ownerCountMap.forEach(({ name, count }, key) => {
-      if(existingNames.has(key)) return
-      employees.push({
-        id: `owner::${key}`,
-        email: '',
-        name,
-        projectsCount: count,
-        lookupType: 'owner',
-        lookupValue: name,
-      })
-    })
-
-    employees.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
 
     res.status(200).json({ employees })
   }catch(error){
