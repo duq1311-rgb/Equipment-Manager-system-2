@@ -21,7 +21,7 @@ function formatDateTime(value){
 export default function AdminVerify(){
   const [tx, setTx] = useState([])
   const [msg, setMsg] = useState('')
-  const [showOnlyPending, setShowOnlyPending] = useState(true)
+  const [showOnlyPending, setShowOnlyPending] = useState(false)
   const [employeeDirectory, setEmployeeDirectory] = useState({})
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(true)
 
