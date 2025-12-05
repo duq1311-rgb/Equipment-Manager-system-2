@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { formatNumberArabic } from '../lib/locale'
 
 export default function EquipmentSelector({onChange, refreshTick}){
   const [items, setItems] = useState([])
@@ -80,7 +81,7 @@ export default function EquipmentSelector({onChange, refreshTick}){
             {filteredItems.map(it=> (
               <div className="equipment-row" key={it.id}>
                 <div style={{flex:1, fontWeight:600}}>{it.name}</div>
-                <div className="chip">متوفر: {it.available_qty}</div>
+                <div className="chip">متوفر: {formatNumberArabic(it.available_qty)}</div>
                 <input type="number" min="0" max={it.available_qty} value={it.selectedQty||0}
                   onChange={e=>setQty(it.id, Math.max(0, Number(e.target.value))) } />
                 {errors[it.id] && <span style={{color:'#D14343', fontSize:'0.85rem'}}>{errors[it.id]}</span>}

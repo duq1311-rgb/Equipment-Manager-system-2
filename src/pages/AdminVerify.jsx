@@ -1,20 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { formatDateTimeArabic, formatNumberArabic } from '../lib/locale'
 
 function statusArabic(s){
   switch(s){
     case 'open': return 'عهدة مفتوحة'
     case 'closed': return 'عهدة مسلّمة'
     default: return s || ''
-  }
-}
-
-function formatDateTime(value){
-  if(!value) return '—'
-  try{
-    return new Date(value).toLocaleString('ar-SA', { hour12: false })
-  }catch(_){
-    return value
   }
 }
 
@@ -136,16 +128,16 @@ export default function AdminVerify(){
                 </header>
 
                 <div className="project-timestamps">
-                  <div>وقت الاستلام: {formatDateTime(t.checkout_time)}</div>
-                  <div>وقت التصوير: {formatDateTime(t.shoot_time)}</div>
-                  <div>وقت الإرجاع: {formatDateTime(t.return_time)}</div>
+                  <div>وقت الاستلام: {formatDateTimeArabic(t.checkout_time)}</div>
+                  <div>وقت التصوير: {formatDateTimeArabic(t.shoot_time)}</div>
+                  <div>وقت الإرجاع: {formatDateTimeArabic(t.return_time)}</div>
                 </div>
 
                 <div className="equipment-items" style={{marginTop:14}}>
                   {(t.transaction_items||[]).map(it=> (
                     <div key={it.id} className="equipment-row" style={{flexWrap:'wrap'}}>
                       <div style={{flex:1, fontWeight:600}}>{(it.equipment && it.equipment.name) || it.equipment_id}</div>
-                      <span className="chip">كمية: {it.qty}</span>
+                      <span className="chip">كمية: {formatNumberArabic(it.qty)}</span>
                       <span className="chip">الحالة: {it.admin_verified ? 'تم التحقق' : 'بانتظار'}</span>
                       {!it.admin_verified && (
                         <button type="button" className="btn-primary" style={{padding:'8px 14px'}} onClick={()=>approveReturnItem(it)}>تمييز كمستلم</button>
