@@ -34,7 +34,7 @@ export default function AdminVerify(){
   async function secureAdminAndLoad(){
     const { data: userRes } = await supabase.auth.getUser()
     const user = userRes?.user || null
-    const ADMIN_UUIDS = (import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731,85975a3c-e601-4c66-bed1-42ad6e953873')
+    const ADMIN_UUIDS = (import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731,85975a3c-e601-4c66-bed1-42ad6e953873,7058bd02-a5bc-4c1e-a935-0b28c2c31976')
       .split(',')
       .map(id => id.trim())
       .filter(Boolean)
