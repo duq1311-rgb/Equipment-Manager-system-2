@@ -124,13 +124,18 @@ export default async function handler(req, res){
       .filter(emp => !ADMIN_ONLY_SET.has(emp.id))
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
 
-    console.log('[list-employees]', {
+    const debugPayload = {
       totalEmployees: employees.length,
       adminOnlyCount: ADMIN_ONLY_SET.size,
-      forceIncludeHit: debugForceIncluded
-    })
+      forceIncludeCandidates: FORCE_INCLUDE_EMPLOYEES,
+      forceIncludeHit: debugForceIncluded,
+      fetchedUsers: authUsers?.length || 0,
+      profileCount: profileMap.size
+    }
 
-    res.status(200).json({ employees })
+    console.log('[list-employees]', debugPayload)
+
+    res.status(200).json({ employees, debug: debugPayload })
   }catch(error){
     res.status(500).json({ error: error.message || 'Unknown error' })
   }
