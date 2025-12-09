@@ -14,6 +14,10 @@ const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || '85975a3c-e601-4c66-be
   .filter(Boolean)
 const ADMIN_ONLY_SET = new Set(ADMIN_ONLY_UUIDS)
 
+// Admins that must still appear in employees list even if env mistakenly includes them
+const FORCE_VISIBLE_ADMIN_UUIDS = ['f32927f5-b616-44a3-88f5-5085fa951731']
+FORCE_VISIBLE_ADMIN_UUIDS.forEach(id => ADMIN_ONLY_SET.delete(id))
+
 export default async function handler(req, res){
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
   if(!supabaseAdmin){
