@@ -19,4 +19,17 @@ if (!rootEl) {
       </ErrorBoundary>
     </React.StrictMode>
   )
+
+  if ('serviceWorker' in navigator) {
+    const registerSW = () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {
+        console.warn('Service worker registration failed')
+      })
+    }
+    if (document.readyState === 'complete') {
+      registerSW()
+    } else {
+      window.addEventListener('load', registerSW, { once: true })
+    }
+  }
 }
