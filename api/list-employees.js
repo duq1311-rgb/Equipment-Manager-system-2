@@ -7,7 +7,7 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
   ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   : null
 
-const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || '85975a3c-e601-4c66-bed1-42ad6e953873')
+const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || '85975a3c-e601-4c66-bed1-42ad6e953873,7058bd02-a5bc-4c1e-a935-0b28c2c31976')
   .split(',')
   .map(id => id.trim())
   .filter(Boolean)

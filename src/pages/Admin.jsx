@@ -3,8 +3,15 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 const ADMIN_ONLY_NAMES = {
-  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي'
+  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976': 'مشرف إضافي'
 }
+
+const FALLBACK_ADMIN_UUIDS = [
+  'f32927f5-b616-44a3-88f5-5085fa951731',
+  '85975a3c-e601-4c66-bed1-42ad6e953873',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976'
+]
 
 function statusArabic(s){
   switch(s){
@@ -41,10 +48,13 @@ export default function Admin(){
     const { data: userRes } = await supabase.auth.getUser()
     const user = userRes?.user || null
     // استخدام قيمة البيئة أو قيمة احتياطية مؤقتة
-    const ADMIN_UUIDS = (import.meta.env.VITE_ADMIN_UUID || 'f32927f5-b616-44a3-88f5-5085fa951731,85975a3c-e601-4c66-bed1-42ad6e953873,7058bd02-a5bc-4c1e-a935-0b28c2c31976')
-      .split(',')
-      .map(id => id.trim())
-      .filter(Boolean)
+    const ADMIN_UUIDS = Array.from(new Set([
+      ...String(import.meta.env.VITE_ADMIN_UUID || '')
+        .split(',')
+        .map(id => id.trim())
+        .filter(Boolean),
+      ...FALLBACK_ADMIN_UUIDS
+    ]))
     if(!user || ADMIN_UUIDS.length===0 || !ADMIN_UUIDS.includes(user.id)){
       setMsg('ليست لديك صلاحية الدخول إلى لوحة المشرف')
       // إعادة توجيه سريع إلى الصفحة الرئيسية
