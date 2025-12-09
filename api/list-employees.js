@@ -127,10 +127,12 @@ export default async function handler(req, res){
     const debugPayload = {
       totalEmployees: employees.length,
       adminOnlyCount: ADMIN_ONLY_SET.size,
+      adminOnlyList: Array.from(ADMIN_ONLY_SET),
       forceIncludeCandidates: FORCE_INCLUDE_EMPLOYEES,
       forceIncludeHit: debugForceIncluded,
       fetchedUsers: authUsers?.length || 0,
-      profileCount: profileMap.size
+      profileCount: profileMap.size,
+      employeeIds: employees.map(emp => emp.id)
     }
 
     console.log('[list-employees]', debugPayload)
