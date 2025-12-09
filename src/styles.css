@@ -341,6 +341,7 @@ input:focus, select:focus, textarea:focus{
 	align-items: center;
 	justify-content: center;
 	padding: 20px;
+	overflow-y: auto;
 	z-index: 200;
 }
 
@@ -353,6 +354,8 @@ input:focus, select:focus, textarea:focus{
 	display: flex;
 	flex-direction: column;
 	gap: 18px;
+	max-height: calc(100vh - 60px);
+	overflow-y: auto;
 }
 
 .modal-card h3{ margin: 0; color: var(--brand-primary); }
