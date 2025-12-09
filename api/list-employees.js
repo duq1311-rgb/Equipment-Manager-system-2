@@ -128,6 +128,7 @@ export default async function handler(req, res){
       totalEmployees: employees.length,
       adminOnlyCount: ADMIN_ONLY_SET.size,
       adminOnlyList: Array.from(ADMIN_ONLY_SET),
+      adminOnlyEnvRaw: process.env.ADMIN_ONLY_UUIDS || null,
       forceIncludeCandidates: FORCE_INCLUDE_EMPLOYEES,
       forceIncludeHit: debugForceIncluded,
       fetchedUsers: authUsers?.length || 0,
