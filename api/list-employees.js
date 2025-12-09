@@ -104,6 +104,7 @@ export default async function handler(req, res){
 
     // Ensure specific admin users are included in employees list
     const FORCE_INCLUDE_EMPLOYEES = ['f32927f5-b616-44a3-88f5-5085fa951731']
+    const debugForceIncluded = []
     FORCE_INCLUDE_EMPLOYEES.forEach(userId => {
       if(!employeeMap.has(userId) && !ADMIN_ONLY_SET.has(userId)){
         const profile = profileMap.get(userId)
@@ -114,6 +115,7 @@ export default async function handler(req, res){
             name: profile,
             projectsCount: countMap[userId] || 0,
           })
+          debugForceIncluded.push(userId)
         }
       }
     })
@@ -121,6 +123,12 @@ export default async function handler(req, res){
     const employees = Array.from(employeeMap.values())
       .filter(emp => !ADMIN_ONLY_SET.has(emp.id))
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
+
+    console.log('[list-employees]', {
+      totalEmployees: employees.length,
+      adminOnlyCount: ADMIN_ONLY_SET.size,
+      forceIncludeHit: debugForceIncluded
+    })
 
     res.status(200).json({ employees })
   }catch(error){
