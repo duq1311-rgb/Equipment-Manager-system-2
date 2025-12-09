@@ -40,6 +40,7 @@ export default function Admin(){
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo, setFilterTo] = useState('')
   const [lastLoadedRange, setLastLoadedRange] = useState({ from: '', to: '' })
+  const [deletingProjectId, setDeletingProjectId] = useState(null)
 
   useEffect(()=>{ secureAdminAndLoad() }, [])
 
@@ -147,6 +148,36 @@ export default function Admin(){
     }
     setMsg('')
     loadEmployeeProjects(selectedEmployee, { from: filterFrom, to: filterTo })
+  }
+
+  async function handleDeleteProject(project){
+    if(!project?.id) return
+    const confirmed = window.confirm(`هل أنت متأكد من حذف مشروع "${project.project_name || 'بدون اسم'}"؟ سيتم إعادة العهدة إلى المخزون.`)
+    if(!confirmed) return
+    setDeletingProjectId(project.id)
+    setMsg('')
+    try{
+      const { data: sessionRes } = await supabase.auth.getSession()
+      const token = sessionRes?.session?.access_token || ''
+      const resp = await fetch('/api/delete-transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ transactionId: project.id })
+      })
+      const json = await resp.json().catch(()=>({}))
+      if(!resp.ok){
+        throw new Error(json?.error || 'فشل حذف المشروع')
+      }
+      setEmployeeProjects(prev => prev.filter(p => p.id !== project.id))
+      setMsg('تم حذف المشروع وإرجاع المعدات للمخزون')
+    }catch(error){
+      setMsg(error.message || 'تعذر حذف المشروع')
+    }finally{
+      setDeletingProjectId(null)
+    }
   }
 
   function handlePrint(){
@@ -311,7 +342,12 @@ export default function Admin(){
             <div className="projects-list">
               {employeeProjects.map(p => (
                 <div key={p.id} className="project-card">
-                  <ProjectItem project={p} getEmployeeName={getEmployeeName} />
+                  <ProjectItem
+                    project={p}
+                    getEmployeeName={getEmployeeName}
+                    onDelete={handleDeleteProject}
+                    deletingProjectId={deletingProjectId}
+                  />
                 </div>
               ))}
             </div>
@@ -323,7 +359,7 @@ export default function Admin(){
     </div>
   )
 }
-function ProjectItem({ project, getEmployeeName }){
+function ProjectItem({ project, getEmployeeName, onDelete, deletingProjectId }){
   const [expanded, setExpanded] = useState(false)
   const ownerName = project.user_id ? getEmployeeName(project.user_id) : null
   const assistantIdsSet = new Set()
@@ -353,9 +389,21 @@ function ProjectItem({ project, getEmployeeName }){
             {role && <span className="chip">{role}</span>}
           </div>
         </div>
-        <button type="button" className="btn-outline" onClick={()=>setExpanded(e=>!e)}>
-          {expanded ? 'إخفاء المعدات' : 'عرض المعدات'}
-        </button>
+        <div style={{display:'flex', gap:8}}>
+          <button type="button" className="btn-outline" onClick={()=>setExpanded(e=>!e)}>
+            {expanded ? 'إخفاء المعدات' : 'عرض المعدات'}
+          </button>
+          {onDelete && (
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={()=>onDelete(project)}
+              disabled={deletingProjectId === project.id}
+            >
+              {deletingProjectId === project.id ? 'جاري الحذف...' : 'حذف المشروع'}
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="project-timestamps">

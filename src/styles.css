@@ -119,9 +119,22 @@ main.with-topbar{
 	font-weight: 600;
 }
 
+.page-back-button{
+	position: sticky;
+	top: 16px;
+	z-index: 5;
+	align-self: flex-start;
+}
+
+.page-back-button .btn-outline:disabled{
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
 .btn-primary,
 .btn-secondary,
-.btn-outline{
+.btn-outline,
+.btn-danger{
 	border-radius: 12px;
 	padding: 12px 20px;
 	font-size: 1rem;
@@ -154,6 +167,16 @@ main.with-topbar{
 }
 
 .btn-outline:hover{ background: var(--surface-muted); }
+
+.btn-danger{
+	background: #c62828;
+	color: #fff;
+	box-shadow: 0 10px 18px rgba(198, 40, 40, 0.25);
+}
+
+.btn-danger:hover{
+	background: #a91f1f;
+}
 
 .app-topbar{
 	position: sticky;

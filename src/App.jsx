@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Checkout from './pages/Checkout'
@@ -13,6 +13,7 @@ import { supabase } from './lib/supabase'
 export default function App(){
   const [user, setUser] = useState(null)
   const nav = useNavigate()
+  const location = useLocation()
   const isAuthenticated = !!user
 
   async function handleLogout(){
@@ -51,6 +52,16 @@ export default function App(){
     }
   },[])
 
+  function handleBackClick(){
+    if(window.history?.state?.idx > 0){
+      nav(-1)
+    }else{
+      nav('/')
+    }
+  }
+
+  const canGoBack = location.pathname !== '/'
+
   return (
     <div className="app">
       {isAuthenticated && (
@@ -63,6 +74,16 @@ export default function App(){
         </header>
       )}
       <main className={isAuthenticated ? 'with-topbar' : ''}>
+        <div className="page-back-button">
+          <button
+            type="button"
+            className="btn-outline"
+            onClick={handleBackClick}
+            disabled={!canGoBack}
+          >
+            رجوع
+          </button>
+        </div>
         <Routes>
           {isAuthenticated ? (
             <>
