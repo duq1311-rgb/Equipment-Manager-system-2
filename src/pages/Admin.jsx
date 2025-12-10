@@ -4,13 +4,15 @@ import { supabase } from '../lib/supabase'
 
 const ADMIN_ONLY_NAMES = {
   '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي',
-  '7058bd02-a5bc-4c1e-a935-0b28c2c31976': 'مشرف إضافي'
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976': 'مشرف إضافي',
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434': 'مشرف'
 }
 
 const FALLBACK_ADMIN_UUIDS = [
   'f32927f5-b616-44a3-88f5-5085fa951731',
   '85975a3c-e601-4c66-bed1-42ad6e953873',
-  '7058bd02-a5bc-4c1e-a935-0b28c2c31976'
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976',
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434'
 ]
 
 function statusArabic(s){
