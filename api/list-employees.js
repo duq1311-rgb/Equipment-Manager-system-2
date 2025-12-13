@@ -20,11 +20,8 @@ const SUPERVISOR_UUIDS = [
 ]
 
 // المستخدمون المخفيون من قائمة الموظفين (الأدمن فقط)
-const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || READ_ONLY_ADMIN_UUIDS.join(','))
-  .split(',')
-  .map(id => id.trim())
-  .filter(Boolean)
-const ADMIN_ONLY_SET = new Set(ADMIN_ONLY_UUIDS)
+// استخدام READ_ONLY_ADMIN_UUIDS مباشرة بدلاً من env لضمان الإخفاء
+const ADMIN_ONLY_SET = new Set(READ_ONLY_ADMIN_UUIDS)
 
 // التأكد من ظهور المشرفين دائماً في قائمة الموظفين
 SUPERVISOR_UUIDS.forEach(id => ADMIN_ONLY_SET.delete(id))
@@ -143,9 +140,8 @@ export default async function handler(req, res){
       totalEmployees: employees.length,
       adminOnlyCount: ADMIN_ONLY_SET.size,
       adminOnlyList: Array.from(ADMIN_ONLY_SET),
-      adminOnlyEnvRaw: process.env.ADMIN_ONLY_UUIDS || null,
-      forceIncludeCandidates: FORCE_INCLUDE_EMPLOYEES,
-      forceIncludeHit: debugForceIncluded,
+      readOnlyAdmins: READ_ONLY_ADMIN_UUIDS,
+      supervisors: SUPERVISOR_UUIDS,
       fetchedUsers: authUsers?.length || 0,
       profileCount: profileMap.size,
       employeeIds: employees.map(emp => emp.id)
