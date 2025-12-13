@@ -17,7 +17,7 @@ const ALL_ADMIN_UUIDS = [...READ_ONLY_ADMIN_UUIDS, ...SUPERVISOR_UUIDS]
 export default function Home(){
   const nav = useNavigate()
   const [displayName, setDisplayName] = useState('')
-  const [stats, setStats] = useState({ openTransactions: 0, pendingVerification: 0, totalProjects: 0, loading: true })
+  const [stats, setStats] = useState({ openTransactions: 0, totalProjects: 0, loading: true })
   const [currentUserId, setCurrentUserId] = useState(null)
 
   useEffect(()=>{
@@ -65,21 +65,17 @@ export default function Home(){
             })
 
         const openCount = userTransactions.filter(t => t.status === 'open').length
-        const pendingCount = userTransactions.filter(t => 
-          t.status === 'open' && (t.transaction_items || []).some(it => !it.admin_verified)
-        ).length
         const totalProjects = userTransactions.length
         
         if(mounted){
           setStats({
             openTransactions: openCount,
-            pendingVerification: pendingCount,
             totalProjects: totalProjects,
             loading: false
           })
         }
       }catch(e){
-        if(mounted) setStats({ openTransactions: 0, pendingVerification: 0, totalProjects: 0, loading: false })
+        if(mounted) setStats({ openTransactions: 0, totalProjects: 0, loading: false })
       }
     }
     load()
@@ -98,15 +94,12 @@ export default function Home(){
         <div className="stat-card stat-card-primary">
           <div className="stat-icon">📦</div>
           <div className="stat-content">
+      <section className="stats-grid">
+        <div className="stat-card stat-card-primary">
+          <div className="stat-icon">📦</div>
+          <div className="stat-content">
             <div className="stat-label">العهد المفتوحة</div>
             <div className="stat-value">{stats.loading ? '...' : stats.openTransactions}</div>
-          </div>
-        </div>
-        <div className="stat-card stat-card-warning">
-          <div className="stat-icon">⏳</div>
-          <div className="stat-content">
-            <div className="stat-label">بانتظار التحقق</div>
-            <div className="stat-value">{stats.loading ? '...' : stats.pendingVerification}</div>
           </div>
         </div>
         <div className="stat-card stat-card-info">
@@ -116,11 +109,7 @@ export default function Home(){
             <div className="stat-value">{stats.loading ? '...' : stats.totalProjects}</div>
           </div>
         </div>
-      </section>
-
-      <section className="page-card">
-        <h2>الإجراءات السريعة</h2>
-        <p style={{color:'var(--text-muted)'}}>اختر المسار المناسب لعملك الحالي:</p>
+      </section>={{color:'var(--text-muted)'}}>اختر المسار المناسب لعملك الحالي:</p>
         <div className="home-actions">
           <button type="button" onClick={()=>nav('/checkout')}>استلام عهدة</button>
           <button type="button" onClick={()=>nav('/return')}>تسليم العهدة</button>
