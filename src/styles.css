@@ -356,6 +356,35 @@ input:focus, select:focus, textarea:focus{
 
 .empty-state{ color: var(--text-muted); }
 
+/* Loading skeleton */
+.skeleton-loader{
+	background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+	background-size: 200% 100%;
+	animation: loading 1.5s ease-in-out infinite;
+	border-radius: 12px;
+	height: 60px;
+	margin: 12px 0;
+}
+
+@keyframes loading {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+.loading-spinner{
+	display: inline-block;
+	width: 20px;
+	height: 20px;
+	border: 3px solid rgba(255,255,255,0.3);
+	border-radius: 50%;
+	border-top-color: #fff;
+	animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
 .modal-backdrop{
 	position: fixed;
 	inset: 0;

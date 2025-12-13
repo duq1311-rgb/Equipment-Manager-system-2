@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Checkout from './pages/Checkout'
 import ReturnPage from './pages/Return'
-import Admin from './pages/Admin'
-import AdminVerify from './pages/AdminVerify'
-// import ImportExcel from './pages/ImportExcel'
 import Home from './pages/Home'
 import { supabase } from './lib/supabase'
+
+// Lazy load heavy admin pages for better performance
+const Admin = lazy(() => import('./pages/Admin'))
+const AdminVerify = lazy(() => import('./pages/AdminVerify'))
 
 export default function App(){
   const [user, setUser] = useState(null)
@@ -91,8 +92,16 @@ export default function App(){
               <Route path="/dashboard" element={<Dashboard/>} />
               <Route path="/checkout" element={<Checkout/>} />
               <Route path="/return" element={<ReturnPage/>} />
-              <Route path="/admin" element={<Admin/>} />
-              <Route path="/admin/verify" element={<AdminVerify/>} />
+              <Route path="/admin" element={
+                <Suspense fallback={<div className="page-container"><div className="page-card" style={{textAlign:'center',padding:'40px'}}>جاري تحميل لوحة المشرف...</div></div>}>
+                  <Admin/>
+                </Suspense>
+              } />
+              <Route path="/admin/verify" element={
+                <Suspense fallback={<div className="page-container"><div className="page-card" style={{textAlign:'center',padding:'40px'}}>جاري تحميل صفحة التحقق...</div></div>}>
+                  <AdminVerify/>
+                </Suspense>
+              } />
               <Route path="/login" element={<Home/>} />
               <Route path="/*" element={<Home/>} />
             </>
@@ -102,7 +111,6 @@ export default function App(){
               <Route path="/*" element={<Login/>} />
             </>
           )}
-          {/* صفحة الاستيراد أزيلت من الموقع */}
         </Routes>
       </main>
     </div>

@@ -131,26 +131,44 @@ export default function Checkout(){
       return
     }
 
-    // insert items and decrement available_qty
-    for(const it of pendingSummary.items){
-      if(!it.selectedQty) continue
-      // جلب القيمة الحالية من قاعدة البيانات
+    // insert items and decrement available_qty (optimized - batch queries)
+    const itemsToInsert = pendingSummary.items.filter(it => it.selectedQty > 0)
+    
+    if(itemsToInsert.length > 0){
+      // جلب جميع المعدات دفعة واحدة
+      const equipmentIds = itemsToInsert.map(it => it.id)
       const { data: currentEquipment } = await supabase
         .from('equipment')
-        .select('available_qty')
-        .eq('id', it.id)
-        .maybeSingle()
+        .select('id, available_qty')
+        .in('id', equipmentIds)
       
-      const currentAvailableQty = currentEquipment?.available_qty ?? 0
+      const equipmentMap = new Map(
+        (currentEquipment || []).map(eq => [eq.id, eq.available_qty ?? 0])
+      )
       
-      await supabase.from('transaction_items').insert({
+      // إدراج جميع العناصر دفعة واحدة
+      const transactionItems = itemsToInsert.map(it => ({
         transaction_id: tx.id,
         equipment_id: it.id,
         qty: it.selectedQty
-      })
-      // decrement available
-      const newAvail = Math.max(0, currentAvailableQty - it.selectedQty)
-      await supabase.from('equipment').update({ available_qty: newAvail }).eq('id', it.id)
+      }))
+      
+      const { error: insertItemsError } = await supabase
+        .from('transaction_items')
+        .insert(transactionItems)
+      
+      if(insertItemsError){
+        setMsg('خطأ في حفظ المعدات')
+        setSubmitting(false)
+        return
+      }
+      
+      // تحديث المخزون لكل معدة
+      for(const it of itemsToInsert){
+        const currentQty = equipmentMap.get(it.id) ?? 0
+        const newAvail = Math.max(0, currentQty - it.selectedQty)
+        await supabase.from('equipment').update({ available_qty: newAvail }).eq('id', it.id)
+      }
     }
 
     if(pendingSummary.assistants && pendingSummary.assistants.length){
