@@ -134,13 +134,22 @@ export default function Checkout(){
     // insert items and decrement available_qty
     for(const it of pendingSummary.items){
       if(!it.selectedQty) continue
+      // جلب القيمة الحالية من قاعدة البيانات
+      const { data: currentEquipment } = await supabase
+        .from('equipment')
+        .select('available_qty')
+        .eq('id', it.id)
+        .maybeSingle()
+      
+      const currentAvailableQty = currentEquipment?.available_qty ?? 0
+      
       await supabase.from('transaction_items').insert({
         transaction_id: tx.id,
         equipment_id: it.id,
         qty: it.selectedQty
       })
       // decrement available
-      const newAvail = Math.max(0, (it.available_qty || 0) - it.selectedQty)
+      const newAvail = Math.max(0, currentAvailableQty - it.selectedQty)
       await supabase.from('equipment').update({ available_qty: newAvail }).eq('id', it.id)
     }
 

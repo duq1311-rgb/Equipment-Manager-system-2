@@ -31,10 +31,12 @@ create table if not exists transaction_items (
   transaction_id uuid references transactions(id) on delete cascade,
   equipment_id uuid references equipment(id) on delete set null,
   qty int not null default 1,
+  returned_qty int default 0,
   damaged boolean default false,
   damage_notes text,
   lost boolean default false,
-  lost_notes text
+  lost_notes text,
+  admin_verified boolean default false
 );
 
 create table if not exists transaction_assistants (

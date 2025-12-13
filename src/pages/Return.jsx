@@ -21,24 +21,51 @@ export default function ReturnPage(){
 
   async function confirmReturn(){
     if(!selectedTx) return
-    // Update equipment counts and write notes only for included items
-    for(const it of selectedTx.items){
-      if(!it.include) continue
-      if(it.returnedQty > 0){
-        // increase available by returnedQty if not lost
-        const add = it.lost ? 0 : it.returnedQty
-        if(add>0){
-          await supabase.from('equipment').update({ available_qty: (it.equipment.available_qty || 0) + add }).eq('id', it.equipment.id)
+    setMsg('جاري معالجة الإرجاع...')
+    
+    try{
+      // Update equipment counts and write notes only for included items
+      for(const it of selectedTx.items){
+        if(!it.include) continue
+        
+        // جلب القيمة الحالية من قاعدة البيانات
+        const { data: currentEquipment } = await supabase
+          .from('equipment')
+          .select('available_qty')
+          .eq('id', it.equipment.id)
+          .maybeSingle()
+        
+        const currentAvailableQty = currentEquipment?.available_qty ?? 0
+        
+        if(it.returnedQty > 0){
+          // increase available by returnedQty if not lost
+          const add = it.lost ? 0 : it.returnedQty
+          if(add>0){
+            const newQty = currentAvailableQty + add
+            await supabase.from('equipment').update({ available_qty: newQty }).eq('id', it.equipment.id)
+          }
         }
+        // update transaction_items row (include returned qty and flags)
+        await supabase.from('transaction_items').update({ 
+          returned_qty: it.returnedQty, 
+          damaged: it.damaged, 
+          damage_notes: it.damage_notes || null, 
+          lost: it.lost, 
+          lost_notes: it.lost_notes || null 
+        }).eq('id', it.id)
       }
-      // update transaction_items row (include returned qty and flags)
-      await supabase.from('transaction_items').update({ returned_qty: it.returnedQty, damaged: it.damaged, damage_notes: it.damage_notes || null, lost: it.lost, lost_notes: it.lost_notes || null }).eq('id', it.id)
+      // Close transaction
+      await supabase.from('transactions').update({ 
+        status: 'closed', 
+        return_time: new Date().toISOString() 
+      }).eq('id', selectedTx.id)
+      
+      setMsg('✅ تم تسجيل الإرجاع بنجاح')
+      setSelectedTx(null)
+      await fetchOpenTx()
+    }catch(error){
+      setMsg(`خطأ في تسجيل الإرجاع: ${error.message}`)
     }
-    // Optionally close transaction
-    await supabase.from('transactions').update({ status: 'closed', return_time: new Date().toISOString() }).eq('id', selectedTx.id)
-    setMsg('تم تسجيل الإرجاع')
-    setSelectedTx(null)
-    fetchOpenTx()
   }
 
   return (
