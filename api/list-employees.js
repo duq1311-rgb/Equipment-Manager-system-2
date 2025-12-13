@@ -7,16 +7,27 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
   ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   : null
 
-// Admin-only users (hidden from employees list)
-const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || '85975a3c-e601-4c66-bed1-42ad6e953873,7058bd02-a5bc-4c1e-a935-0b28c2c31976,6992bff2-1fbe-4991-84f3-9da4dcca9434')
+// الأدمن (مشاهدة فقط - مخفي من قائمة الموظفين)
+const READ_ONLY_ADMIN_UUIDS = [
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976'
+]
+
+// المشرفين (يظهرون في قائمة الموظفين ولديهم كل الصلاحيات)
+const SUPERVISOR_UUIDS = [
+  'f32927f5-b616-44a3-88f5-5085fa951731', // عبدالعزيز الغامدي
+  '85975a3c-e601-4c66-bed1-42ad6e953873'  // تركي العسبلي
+]
+
+// المستخدمون المخفيون من قائمة الموظفين (الأدمن فقط)
+const ADMIN_ONLY_UUIDS = (process.env.ADMIN_ONLY_UUIDS || READ_ONLY_ADMIN_UUIDS.join(','))
   .split(',')
   .map(id => id.trim())
   .filter(Boolean)
 const ADMIN_ONLY_SET = new Set(ADMIN_ONLY_UUIDS)
 
-// Admins that must still appear in employees list even if env mistakenly includes them
-const FORCE_VISIBLE_ADMIN_UUIDS = ['f32927f5-b616-44a3-88f5-5085fa951731']
-FORCE_VISIBLE_ADMIN_UUIDS.forEach(id => ADMIN_ONLY_SET.delete(id))
+// التأكد من ظهور المشرفين دائماً في قائمة الموظفين
+SUPERVISOR_UUIDS.forEach(id => ADMIN_ONLY_SET.delete(id))
 
 export default async function handler(req, res){
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })

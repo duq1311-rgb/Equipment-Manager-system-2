@@ -1,18 +1,30 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
-const ADMIN_ONLY_NAMES = {
-  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي',
-  '7058bd02-a5bc-4c1e-a935-0b28c2c31976': 'مشرف إضافي',
-  '6992bff2-1fbe-4991-84f3-9da4dcca9434': 'مشرف'
-}
-
-const FALLBACK_ADMIN_UUIDS = [
-  'f32927f5-b616-44a3-88f5-5085fa951731',
-  '85975a3c-e601-4c66-bed1-42ad6e953873',
-  '7058bd02-a5bc-4c1e-a935-0b28c2c31976',
-  '6992bff2-1fbe-4991-84f3-9da4dcca9434'
+// الأدمن (مشاهدة فقط)
+const READ_ONLY_ADMIN_UUIDS = [
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976'
 ]
+
+// المشرفين (كل الصلاحيات)
+const SUPERVISOR_UUIDS = [
+  'f32927f5-b616-44a3-88f5-5085fa951731', // عبدالعزيز الغامدي
+  '85975a3c-e601-4c66-bed1-42ad6e953873'  // تركي العسبلي
+]
+
+// جميع من لديهم صلاحية دخول صفحة التحقق
+const FALLBACK_ADMIN_UUIDS = [
+  ...READ_ONLY_ADMIN_UUIDS,
+  ...SUPERVISOR_UUIDS
+]
+
+const ADMIN_ONLY_NAMES = {
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434': 'مشرف',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976': 'مشرف إضافي',
+  'f32927f5-b616-44a3-88f5-5085fa951731': 'عبدالعزيز الغامدي',
+  '85975a3c-e601-4c66-bed1-42ad6e953873': 'تركي العسبلي'
+}
 
 function statusArabic(s){
   switch(s){
