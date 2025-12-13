@@ -47,6 +47,8 @@ export default function AdminVerify(){
   const [tx, setTx] = useState([])
   const [msg, setMsg] = useState('')
   const [showOnlyPending, setShowOnlyPending] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [employeeDirectory, setEmployeeDirectory] = useState({})
   const [isLoadingDirectory, setIsLoadingDirectory] = useState(true)
 
@@ -109,51 +111,109 @@ export default function AdminVerify(){
     return emp?.name || emp?.email || userId
   }
 
-  async function approveReturnItem(item){
-    const { error } = await supabase
-      .from('transaction_items')
-      .update({ admin_verified: true })
-      .eq('id', item.id)
-    if(error){
-      const detail = error?.message || ''
-      const hint = detail.includes('column') && detail.includes('admin_verified')
-        ? 'يبدو أن عمود admin_verified غير موجود. أضف العمود في Supabase: ALTER TABLE public.transaction_items ADD COLUMN admin_verified boolean NOT NULL DEFAULT false;'
-        : ''
-      setMsg(`فشل التحقق من العنصر${detail ? `: ${detail}` : ''}${hint ? ` — ${hint}` : ''}`)
+  async function verifyAndCloseTransaction(t){
+    if(!t || t.status !== 'open'){
+      setMsg('العهدة ليست قيد الانتظار للإغلاق')
       return
     }
-    setMsg('تم التحقق من العنصر')
-    await fetchAll()
-  }
-
-  async function finalizeTransactionIfAllVerified(t){
-    const items = t.transaction_items || []
-    const allVerified = items.length>0 && items.every(it => it.admin_verified)
-    if(!allVerified){ setMsg('هناك عناصر لم يتم التحقق منها بعد'); return }
-    if(t.status !== 'open'){ setMsg('العهدة ليست قيد الانتظار للإغلاق'); return }
-    const { error } = await supabase
-      .from('transactions')
-      .update({ status: 'closed', return_time: new Date().toISOString() })
-      .eq('id', t.id)
-    if(error){ setMsg('فشل إغلاق العهدة'); return }
-    setMsg('تم إغلاق العهدة بعد التحقق')
-    await fetchAll()
+    
+    setMsg('جاري التحقق وإغلاق العهدة...')
+    
+    try{
+      const items = t.transaction_items || []
+      
+      // تمييز جميع العناصر كمستلمة
+      for(const item of items){
+        await supabase
+          .from('transaction_items')
+          .update({ admin_verified: true })
+          .eq('id', item.id)
+      }
+      
+      // إغلاق العهدة
+      const { error } = await supabase
+        .from('transactions')
+        .update({ status: 'closed', return_time: new Date().toISOString() })
+        .eq('id', t.id)
+      
+      if(error){
+        setMsg('فشل إغلاق العهدة')
+        return
+      }
+      
+      setMsg('✅ تم التحقق وإغلاق العهدة بنجاح')
+      await fetchAll()
+    }catch(error){
+      setMsg(`خطأ: ${error.message}`)
+    }
   }
 
   const visibleTx = useMemo(()=>{
-    if(!showOnlyPending) return tx
-    return (tx||[]).filter(t => t.status==='open' && (t.transaction_items||[]).some(it=>!it.admin_verified))
-  }, [tx, showOnlyPending])
+    const term = (searchTerm || '').toLowerCase().trim()
+
+    const matchesTerm = (t) => {
+      if(!term) return true
+      const owner = (t.project_owner || '').toLowerCase()
+      const project = (t.project_name || '').toLowerCase()
+      const employee = (employeeNameFor(t.user_id) || '').toLowerCase()
+      const assistantsNames = Array.from(new Set([
+        ...(t.assistant_user_id ? [t.assistant_user_id] : []),
+        ...((t.transaction_assistants || []).map(link => link.assistant_user_id).filter(Boolean))
+      ])).map(id => (employeeNameFor(id) || '').toLowerCase())
+      return [owner, project, employee, ...assistantsNames].some(text => text.includes(term))
+    }
+
+    const needsVerification = (t) => t.status==='open' && (t.transaction_items||[]).some(it=>!it.admin_verified)
+
+    return (tx||[])
+      .filter(t => {
+        if(showOnlyPending && !needsVerification(t)) return false
+        if(statusFilter !== 'all'){
+          if(statusFilter === 'pending'){
+            if(!needsVerification(t)) return false
+          }else if(t.status !== statusFilter){
+            return false
+          }
+        }
+        return matchesTerm(t)
+      })
+  }, [tx, showOnlyPending, statusFilter, searchTerm, employeeDirectory])
+
+  const statusBadgeClass = (t) => {
+    const pending = t.status==='open' && (t.transaction_items||[]).some(it=>!it.admin_verified)
+    if(t.status === 'closed') return 'chip chip-status-closed'
+    if(pending) return 'chip chip-status-pending'
+    return 'chip chip-status-open'
+  }
 
   return (
     <div className="page-container">
       <section className="page-hero">
         <h1>التحقق من العهدة</h1>
         <p>راجع العهدة المُعادة، ووافق على العناصر المستلمة، ثم أغلق المهمة عند اكتمالها.</p>
-        <label style={{display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.18)', padding:'10px 16px', borderRadius:12}}>
-          <input type="checkbox" checked={showOnlyPending} onChange={e=>setShowOnlyPending(e.target.checked)} />
-          <span>عرض العهد التي تحتاج للتحقق فقط</span>
-        </label>
+        <div style={{display:'grid', gap:10, gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))', marginTop:10}}>
+          <input
+            type="text"
+            placeholder="بحث: موظف، مشروع، مالك المشروع"
+            value={searchTerm}
+            onChange={e=>setSearchTerm(e.target.value)}
+            style={{padding:'10px 12px', borderRadius:12, border:'1px solid #e0e0e0'}}
+          />
+          <select
+            value={statusFilter}
+            onChange={e=>setStatusFilter(e.target.value)}
+            style={{padding:'10px 12px', borderRadius:12, border:'1px solid #e0e0e0'}}
+          >
+            <option value="all">كل الحالات</option>
+            <option value="open">مفتوحة</option>
+            <option value="pending">بانتظار التحقق</option>
+            <option value="closed">مغلقة</option>
+          </select>
+          <label style={{display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.18)', padding:'10px 16px', borderRadius:12}}>
+            <input type="checkbox" checked={showOnlyPending} onChange={e=>setShowOnlyPending(e.target.checked)} />
+            <span>عرض العهد التي تحتاج للتحقق فقط</span>
+          </label>
+        </div>
       </section>
 
       <section className="page-card">
@@ -169,6 +229,11 @@ export default function AdminVerify(){
                 <header>
                   <strong style={{fontSize:'1.1rem'}}>{t.project_name}</strong>
                   <span style={{color:'var(--text-muted)'}}>صاحب المشروع: {t.project_owner || 'غير محدد'}</span>
+                  <span className={statusBadgeClass(t)}>
+                    {t.status === 'open' && (t.transaction_items||[]).some(it=>!it.admin_verified)
+                      ? 'بانتظار التحقق'
+                      : statusArabic(t.status)}
+                  </span>
                   <span className="chip">الموظف المسؤول: {employeeNameFor(t.user_id)}</span>
                   {Array.from(new Set([
                     ...(t.assistant_user_id ? [t.assistant_user_id] : []),
@@ -186,13 +251,9 @@ export default function AdminVerify(){
 
                 <div className="equipment-items" style={{marginTop:14}}>
                   {(t.transaction_items||[]).map(it=> (
-                    <div key={it.id} className="equipment-row" style={{flexWrap:'wrap'}}>
+                    <div key={it.id} className="equipment-row">
                       <div style={{flex:1, fontWeight:600}}>{(it.equipment && it.equipment.name) || it.equipment_id}</div>
                       <span className="chip">كمية: {it.qty}</span>
-                      <span className="chip">الحالة: {it.admin_verified ? 'تم التحقق' : 'بانتظار'}</span>
-                      {!it.admin_verified && (
-                        <button type="button" className="btn-primary" style={{padding:'8px 14px'}} onClick={()=>approveReturnItem(it)}>تمييز كمستلم</button>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -202,9 +263,8 @@ export default function AdminVerify(){
                     <button
                       type="button"
                       className="btn-primary"
-                      onClick={()=>finalizeTransactionIfAllVerified(t)}
-                      disabled={(t.transaction_items||[]).some(it=>!it.admin_verified)}
-                    >إغلاق العهدة بعد التحقق</button>
+                      onClick={()=>verifyAndCloseTransaction(t)}
+                    >✅ تم التحقق - إغلاق العهدة</button>
                   </footer>
                 )}
               </div>

@@ -7,6 +7,10 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
   ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   : null
 
+// كاش خفيف لمدة 5 دقائق لتقليل زمن تحميل الموظفين
+const CACHE_TTL_MS = 5 * 60 * 1000
+const employeeCache = { data: null, expiresAt: 0 }
+
 // الأدمن (مشاهدة فقط - مخفي من قائمة الموظفين)
 const READ_ONLY_ADMIN_UUIDS = [
   '6992bff2-1fbe-4991-84f3-9da4dcca9434',
@@ -33,6 +37,15 @@ export default async function handler(req, res){
     if(!SUPABASE_URL) missing.push('SUPABASE_URL')
     if(!SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
     return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
+  }
+
+  const forceRefresh = req.query?.refresh === 'true'
+  const now = Date.now()
+  if(!forceRefresh && employeeCache.data && employeeCache.expiresAt > now){
+    const remaining = employeeCache.expiresAt - now
+    const debug = { ...employeeCache.data.debug, fromCache: true, ttlMs: remaining, expiresAt: employeeCache.expiresAt, forceRefresh }
+    console.log('[list-employees] cache hit', { ttlMs: remaining, expiresAt: employeeCache.expiresAt, forceRefresh })
+    return res.status(200).json({ employees: employeeCache.data.employees, debug })
   }
 
   try{
@@ -147,9 +160,21 @@ export default async function handler(req, res){
       employeeIds: employees.map(emp => emp.id)
     }
 
-    console.log('[list-employees]', debugPayload)
+    const debugWithMeta = {
+      ...debugPayload,
+      fromCache: false,
+      forceRefresh,
+      cachedAt: now,
+      ttlMs: CACHE_TTL_MS,
+      expiresAt: now + CACHE_TTL_MS
+    }
 
-    res.status(200).json({ employees, debug: debugPayload })
+    employeeCache.data = { employees, debug: debugWithMeta }
+    employeeCache.expiresAt = now + CACHE_TTL_MS
+
+    console.log('[list-employees]', debugWithMeta)
+
+    res.status(200).json({ employees, debug: debugWithMeta })
   }catch(error){
     res.status(500).json({ error: error.message || 'Unknown error' })
   }

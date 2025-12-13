@@ -334,6 +334,10 @@ input:focus, select:focus, textarea:focus{
 	font-size:0.86rem;
 }
 
+.chip-status-pending{ background:#ffeec2; color:#b26a00; }
+.chip-status-open{ background:#cde5ff; color:#0b52b2; }
+.chip-status-closed{ background:#d8f5c2; color:#1b5e20; }
+
 .section-subtle{
 	background: rgba(255,255,255,0.65);
 	border-radius:18px;
