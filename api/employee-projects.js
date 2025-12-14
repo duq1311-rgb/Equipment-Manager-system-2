@@ -16,6 +16,9 @@ export default async function handler(req, res){
     return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
   }
 
+  // Prevent stale cache in clients
+  res.set('Cache-Control', 'no-store')
+
   const { userId, from: fromParam, to: toParam } = req.query || {}
   if(!userId) return res.status(400).json({ error: 'userId parameter is required' })
 

@@ -12,6 +12,8 @@ export default async function handler(req, res){
     if(!SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
     return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
   }
+  // Prevent stale cache in clients
+  res.set('Cache-Control', 'no-store')
   try{
     // List users via Admin API (first page)
     const { data, error } = await supabaseAdmin.auth.admin.listUsers()
