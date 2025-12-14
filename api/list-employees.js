@@ -41,6 +41,8 @@ export default async function handler(req, res){
 
   const forceRefresh = req.query?.refresh === 'true'
   const now = Date.now()
+  // Ensure clients don't cache this response at the browser level
+  res.set('Cache-Control', 'no-store')
   if(!forceRefresh && employeeCache.data && employeeCache.expiresAt > now){
     const remaining = employeeCache.expiresAt - now
     const debug = { ...employeeCache.data.debug, fromCache: true, ttlMs: remaining, expiresAt: employeeCache.expiresAt, forceRefresh }
