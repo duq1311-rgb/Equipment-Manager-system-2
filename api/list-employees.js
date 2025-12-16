@@ -147,20 +147,13 @@ export default async function handler(req, res){
       }
     })
 
-    // عرض جميع الموظفين ما عدا read-only admins (الأدمن المخفيين)
+    // عرض جميع الموظفين بدون فلترة
     const employees = Array.from(employeeMap.values())
-      .filter(emp => !READ_ONLY_ADMIN_UUIDS.includes(emp.id))
       .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' }))
 
     const debugPayload = {
       totalEmployees: employees.length,
-      adminOnlyCount: ADMIN_ONLY_SET.size,
-      adminOnlyList: Array.from(ADMIN_ONLY_SET),
-      readOnlyAdmins: READ_ONLY_ADMIN_UUIDS,
-      supervisors: SUPERVISOR_UUIDS,
-      fetchedUsers: authUsers?.length || 0,
-      profileCount: profileMap.size,
-      employeeIds: employees.map(emp => emp.id)
+      allEmployeeIds: employees.map(emp => emp.id)
     }
 
     const debugWithMeta = {
