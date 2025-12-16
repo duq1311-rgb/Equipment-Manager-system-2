@@ -70,6 +70,11 @@ export default function ReturnPage(){
         status: 'closed', 
         return_time: new Date().toISOString() 
       }).eq('id', selectedTx.id)
+
+      // بعد الإغلاق: نفّذ مصالحة المخزون عبر API لضمان الدقة
+      try{
+        await fetch('/api/reconcile-inventory', { method: 'POST' })
+      }catch{ /* ignore */ }
       
       setMsg('✅ تم تسجيل الإرجاع بنجاح')
       setSelectedTx(null)
