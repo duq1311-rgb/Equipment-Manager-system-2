@@ -1,5 +1,5 @@
-// استخدم timestamp عشوائي لضمان تحديث الـ cache مع كل deployment
-const CACHE_VERSION = 'v' + Math.floor(Date.now() / 1000)
+// نسخة ثابتة لوقف تحديث الـ cache في كل زيارة (حدّثها يدوياً عند النشر)
+const CACHE_VERSION = 'v2025-12-17-1'
 const CACHE_NAME = 'equipment-manager-' + CACHE_VERSION
 const ASSETS_TO_CACHE = [
   '/',
@@ -9,30 +9,19 @@ const ASSETS_TO_CACHE = [
 ]
 
 self.addEventListener('install', event => {
-  console.log('[SW] Installing:', CACHE_NAME)
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[SW] Caching assets')
-        return cache.addAll(ASSETS_TO_CACHE)
-      })
+      .then(cache => cache.addAll(ASSETS_TO_CACHE))
       .then(() => self.skipWaiting())
-      .catch(err => console.error('[SW] Install error:', err))
   )
 })
 
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating:', CACHE_NAME)
   event.waitUntil(
-    caches.keys()
-      .then(keys => {
-        console.log('[SW] Deleting old caches:', keys)
-        return Promise.all(keys.map(key => caches.delete(key)))
-      })
-      .then(() => {
-        console.log('[SW] All old caches deleted')
-        return self.clients.claim()
-      })
+    caches.keys().then(keys => Promise.all(keys
+      .filter(key => key !== CACHE_NAME)
+      .map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
   )
 })
 
