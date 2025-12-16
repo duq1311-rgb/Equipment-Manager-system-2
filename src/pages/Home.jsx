@@ -87,13 +87,9 @@ export default function Home(){
     <div className="page-container">
       <section className="page-hero">
         <h1>مرحباً {displayName || 'فريق فالكنز'}</h1>
-  <p>إنَّ اللهَ تعالى يُحِبُّ إذا عمِلَ أحدُكمْ عملًا أنْ يُتقِنَهُ.</p>
+        <p>إنَّ اللهَ تعالى يُحِبُّ إذا عمِلَ أحدُكمْ عملًا أنْ يُتقِنَهُ.</p>
       </section>
 
-      <section className="stats-grid">
-        <div className="stat-card stat-card-primary">
-          <div className="stat-icon">📦</div>
-          <div className="stat-content">
       <section className="stats-grid">
         <div className="stat-card stat-card-primary">
           <div className="stat-icon">📦</div>
@@ -109,13 +105,14 @@ export default function Home(){
             <div className="stat-value">{stats.loading ? '...' : stats.totalProjects}</div>
           </div>
         </div>
-      </section>={{color:'var(--text-muted)'}}>اختر المسار المناسب لعملك الحالي:</p>
-        <div className="home-actions">
-          <button type="button" onClick={()=>nav('/checkout')}>استلام عهدة</button>
-          <button type="button" onClick={()=>nav('/return')}>تسليم العهدة</button>
-          <button type="button" onClick={()=>nav('/admin')}>لوحة المشرف</button>
-        </div>
       </section>
+
+      <p style={{color:'var(--text-muted)'}}>اختر المسار المناسب لعملك الحالي:</p>
+      <div className="home-actions">
+        <button type="button" onClick={()=>nav('/checkout')}>استلام عهدة</button>
+        <button type="button" onClick={()=>nav('/return')}>تسليم العهدة</button>
+        <button type="button" onClick={()=>nav('/admin')}>لوحة المشرف</button>
+      </div>
     </div>
   )
 }
