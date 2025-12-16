@@ -13,5 +13,51 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // حل قوي لـ cache busting - تنظيف شامل عند كل تحديث
+      (async function initServiceWorker() {
+        if (!('serviceWorker' in navigator) || !('caches' in window)) {
+          console.warn('Service Workers not supported')
+          return
+        }
+
+        try {
+          // 1. حذف جميع الـ caches القديمة فوراً
+          const cacheNames = await caches.keys()
+          console.log('[Init] Found caches:', cacheNames)
+          await Promise.all(cacheNames.map(name => {
+            console.log('[Init] Deleting cache:', name)
+            return caches.delete(name)
+          }))
+
+          // 2. إلغاء تسجيل Service Workers القديمة
+          const registrations = await navigator.serviceWorker.getRegistrations()
+          console.log('[Init] Found registrations:', registrations.length)
+          for (let reg of registrations) {
+            console.log('[Init] Unregistering old SW')
+            await reg.unregister()
+          }
+
+          // 3. تسجيل Service Worker الجديد
+          console.log('[Init] Registering new SW')
+          const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          console.log('[Init] SW registered successfully:', registration)
+
+          // 4. إجبار تحديث فوري
+          registration.update()
+
+        } catch (error) {
+          console.error('[Init] Error setting up SW:', error)
+        }
+      })()
+
+      // إعادة تحميل الصفحة عند تحديث Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('[SW] Controller changed - Reloading page')
+          window.location.reload()
+        })
+      }
+    </script>
   </body>
 </html>

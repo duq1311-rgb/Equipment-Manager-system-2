@@ -5,8 +5,9 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1.js" },
+    { "src": "/sw.js", "headers": { "Cache-Control": "public, max-age=0, must-revalidate" }, "dest": "/sw.js" },
     { "handle": "filesystem" },
-    { "src": "/", "headers": { "Cache-Control": "no-store, must-revalidate" }, "dest": "/index.html" },
-    { "src": "/(.*)", "headers": { "Cache-Control": "no-store, must-revalidate" }, "dest": "/index.html" }
+    { "src": "/index.html", "headers": { "Cache-Control": "public, max-age=0, must-revalidate" }, "dest": "/index.html" },
+    { "src": "/(.*)", "headers": { "Cache-Control": "public, max-age=3600" }, "dest": "/$1" }
   ]
 }
