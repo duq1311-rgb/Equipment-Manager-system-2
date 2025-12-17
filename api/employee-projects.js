@@ -105,4 +105,6 @@ export default async function handler(req, res){
   }catch(error){
     res.status(200).json({ projects: [], error: error.message || 'Unknown error' })
   }
+  // ضمان أن الاستجابة ترجع projects حتى لو لم يتم إرسال أي استجابة أخرى
+  if (!res.headersSent) res.status(200).json({ projects: [] });
 }
