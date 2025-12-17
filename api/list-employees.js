@@ -51,6 +51,7 @@ export default async function handler(req, res){
   }
 
   try{
+    console.log('[list-employees] START - Loading profiles, transactions, assistants')
     const [
       { data: profiles, error: profilesError },
       { data: transactions, error: txError },
@@ -65,7 +66,9 @@ export default async function handler(req, res){
     if(txError) throw txError
     if(assistantsError) throw assistantsError
 
+    console.log('[list-employees] Fetched:', { profilesCount: profiles?.length, txCount: transactions?.length })
     const authUsers = await fetchAllUsers()
+    console.log('[list-employees] Auth users count:', authUsers?.length)
 
     const countMap = {}
       function increment(id){
