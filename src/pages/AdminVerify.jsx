@@ -91,14 +91,20 @@ export default function AdminVerify(){
       if(error) throw error
 
       const map = {}
-      ;(profiles || []).forEach(profile => {
-        map[profile.id] = {
-          id: profile.id,
-          name: profile.full_name || profile.id,
-          email: '',
-          projectsCount: 0
-        }
-      })
+      
+      // استبعاد الأدمن فقط من القائمة (المشرفين يظهرون)
+      const ADMIN_IDS = new Set(READ_ONLY_ADMIN_UUIDS)
+      
+      ;(profiles || [])
+        .filter(profile => !ADMIN_IDS.has(profile.id))
+        .forEach(profile => {
+          map[profile.id] = {
+            id: profile.id,
+            name: profile.full_name || profile.id,
+            email: '',
+            projectsCount: 0
+          }
+        })
       
       Object.entries(ADMIN_ONLY_NAMES).forEach(([id, name]) => {
         if(!map[id]){

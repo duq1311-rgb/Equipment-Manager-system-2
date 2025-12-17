@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react'
 import EquipmentSelector from '../components/EquipmentSelector'
 import { supabase } from '../lib/supabase'
 
+// الأدمن (مخفيين من قائمة الموظفين)
+const READ_ONLY_ADMIN_UUIDS = [
+  '6992bff2-1fbe-4991-84f3-9da4dcca9434',
+  '7058bd02-a5bc-4c1e-a935-0b28c2c31976'
+]
+
 export default function Checkout(){
   const [projectName, setProjectName] = useState('')
   const [projectOwner, setProjectOwner] = useState('')
@@ -29,12 +35,17 @@ export default function Checkout(){
       
       if(error) throw error
 
-      const employeesList = (profiles || []).map(profile => ({
-        id: profile.id,
-        name: profile.full_name || profile.id,
-        email: '',
-        projectsCount: 0
-      }))
+      // استبعاد الأدمن من القائمة
+      const ADMIN_IDS = new Set(READ_ONLY_ADMIN_UUIDS)
+      
+      const employeesList = (profiles || [])
+        .filter(profile => !ADMIN_IDS.has(profile.id))
+        .map(profile => ({
+          id: profile.id,
+          name: profile.full_name || profile.id,
+          email: '',
+          projectsCount: 0
+        }))
 
       setEmployees(employeesList)
     }catch(error){

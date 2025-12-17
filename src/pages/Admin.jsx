@@ -91,30 +91,58 @@ export default function Admin(){
       // قراءة الموظفين مباشرة من Supabase
       const [
         { data: profiles, error: profilesError },
-        { data: transactions, error: txError }
+        { data: transactions, error: txError },
+        { data: assistantLinks, error: assistantsError }
       ] = await Promise.all([
         supabase.from('profiles').select('id, full_name'),
-        supabase.from('transactions').select('id, user_id')
+        supabase.from('transactions').select('id, user_id, assistant_user_id'),
+        supabase.from('transaction_assistants').select('transaction_id, assistant_user_id')
       ])
 
       if(profilesError) throw profilesError
       if(txError) throw txError
+      if(assistantsError) throw assistantsError
 
-      // حساب عدد المشاريع لكل موظف
+      // حساب عدد المشاريع لكل موظف (كصاحب مشروع أو مساعد)
       const countMap = {}
+      
+      function increment(id){
+        if(!id) return
+        countMap[id] = (countMap[id] || 0) + 1
+      }
+
+      // إنشاء خريطة للمساعدين لكل transaction
+      const assistantsByTransaction = new Map()
+      ;(assistantLinks || []).forEach(link => {
+        if(!link.transaction_id || !link.assistant_user_id) return
+        const set = assistantsByTransaction.get(link.transaction_id) || new Set()
+        if(!set.has(link.assistant_user_id)){
+          set.add(link.assistant_user_id)
+          increment(link.assistant_user_id)
+        }
+        assistantsByTransaction.set(link.transaction_id, set)
+      })
+
+      // عد المشاريع (صاحب + مساعد قديم في نفس الجدول)
       ;(transactions || []).forEach(tx => {
-        if(tx.user_id){
-          countMap[tx.user_id] = (countMap[tx.user_id] || 0) + 1
+        increment(tx.user_id)
+        const assistantsForTransaction = assistantsByTransaction.get(tx.id)
+        if((!assistantsForTransaction || assistantsForTransaction.size === 0) && tx.assistant_user_id){
+          increment(tx.assistant_user_id)
         }
       })
 
-      // تحويل البيانات للصيغة المطلوبة
-      const employeesList = (profiles || []).map(profile => ({
-        id: profile.id,
-        name: profile.full_name || profile.id,
-        email: '',
-        projectsCount: countMap[profile.id] || 0
-      }))
+      // تحويل البيانات للصيغة المطلوبة واستبعاد الأدمن
+      const ADMIN_IDS = new Set(READ_ONLY_ADMIN_UUIDS)
+      
+      const employeesList = (profiles || [])
+        .filter(profile => !ADMIN_IDS.has(profile.id)) // استبعاد الأدمن فقط
+        .map(profile => ({
+          id: profile.id,
+          name: profile.full_name || profile.id,
+          email: '',
+          projectsCount: countMap[profile.id] || 0
+        }))
 
       setEmployees(employeesList)
     }catch(error){
