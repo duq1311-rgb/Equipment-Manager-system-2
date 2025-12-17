@@ -10,7 +10,7 @@ export default function EquipmentSelector({onChange, refreshTick}){
   useEffect(()=>{ if(refreshTick>=0) fetchEquip() }, [refreshTick])
 
   async function fetchEquip(){
-    const { data } = await supabase.from('equipment').select('*').order('name')
+    const { data } = await supabase.from('equipment').select('*, updated_at').neq('id', '0').order('name')
     setItems(data || [])
     // set initial category to first available
     const categories = getCategories(data || [])

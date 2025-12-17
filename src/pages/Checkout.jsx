@@ -31,7 +31,7 @@ export default function Checkout(){
       // قراءة الموظفين مباشرة من Supabase
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, updated_at').neq('id', '0') // force network
       
       if(error) throw error
 

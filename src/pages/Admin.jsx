@@ -94,9 +94,9 @@ export default function Admin(){
         { data: transactions, error: txError },
         { data: assistantLinks, error: assistantsError }
       ] = await Promise.all([
-        supabase.from('profiles').select('id, full_name'),
-        supabase.from('transactions').select('id, user_id, assistant_user_id'),
-        supabase.from('transaction_assistants').select('transaction_id, assistant_user_id')
+        supabase.from('profiles').select('id, full_name, updated_at').neq('id', '0'), // force network
+        supabase.from('transactions').select('id, user_id, assistant_user_id, updated_at').neq('id', '0'),
+        supabase.from('transaction_assistants').select('transaction_id, assistant_user_id, created_at').neq('transaction_id', '0')
       ])
 
       if(profilesError) throw profilesError
@@ -188,7 +188,8 @@ export default function Admin(){
       const params = new URLSearchParams({ userId: emp.id })
       if(fromValue) params.append('from', fromValue)
       if(toValue) params.append('to', toValue)
-      const resp = await fetch(`/api/employee-projects?${params.toString()}`)
+      // عند جلب المشاريع
+      const resp = await fetch(`/api/employee-projects?${params.toString()}`, { cache: 'no-store' })
       const json = await resp.json().catch(()=>({}))
       if(!resp.ok){
         throw new Error(json?.error || 'فشل جلب مشاريع الموظف')
@@ -229,14 +230,7 @@ export default function Admin(){
     try{
       const { data: sessionRes } = await supabase.auth.getSession()
       const token = sessionRes?.session?.access_token || ''
-      const resp = await fetch('/api/delete-transaction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ transactionId: project.id })
-      })
+      const resp = await fetch('/api/delete-transaction', { method: 'POST', body: JSON.stringify({ id: project.id }), headers: { 'Content-Type': 'application/json' }, cache: 'no-store' })
       const json = await resp.json().catch(()=>({}))
       if(!resp.ok){
         throw new Error(json?.error || 'فشل حذف المشروع')

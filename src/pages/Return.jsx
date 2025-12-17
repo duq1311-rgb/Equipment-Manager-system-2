@@ -9,12 +9,12 @@ export default function ReturnPage(){
   useEffect(()=>{ fetchOpenTx() }, [])
 
   async function fetchOpenTx(){
-    const { data } = await supabase.from('transactions').select('*').eq('status','open').order('created_at', {ascending:false})
+    const { data } = await supabase.from('transactions').select('*, updated_at').eq('status','open').neq('id', '0').order('created_at', {ascending:false})
     setOpenTx(data || [])
   }
 
   async function loadItems(txId){
-    const { data } = await supabase.from('transaction_items').select('*, equipment(*)').eq('transaction_id', txId)
+    const { data } = await supabase.from('transaction_items').select('*, equipment(*), updated_at').eq('transaction_id', txId).neq('id', '0')
     // attach fields for damaged/lost and returned qty and include checkbox
     setSelectedTx({ id: txId, items: (data || []).map(d=>({ ...d, returnedQty: d.qty, damaged:false, lost:false, include:true })) })
   }
@@ -52,7 +52,7 @@ export default function ReturnPage(){
 
       // بعد الإغلاق: نفّذ مصالحة المخزون عبر API لضمان الدقة
       try{
-        await fetch('/api/reconcile-inventory', { method: 'POST' })
+        await fetch('/api/reconcile-inventory', { method: 'POST', cache: 'no-store' })
       }catch{ /* ignore */ }
       
       setMsg('✅ تم تسجيل الإرجاع بنجاح')
