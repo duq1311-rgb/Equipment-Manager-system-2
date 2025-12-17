@@ -180,19 +180,32 @@ export default function Admin(){
   }
 
   async function loadEmployeeProjects(emp, options = {}){
-    if(!emp) return
+    if(!emp) {
+      console.log('emp غير موجود، الخروج من الدالة')
+      return
+    }
     console.log('emp.id', emp?.id)
     setIsLoadingProjects(true)
+    console.log('بعد setIsLoadingProjects')
     setSelectedEmployee(emp)
+    console.log('بعد setSelectedEmployee')
+    console.log('قبل تنفيذ fetch: employee', emp)
     try{
       const fromValue = typeof options.from === 'string' ? options.from : filterFrom
+      console.log('fromValue:', fromValue)
       const toValue = typeof options.to === 'string' ? options.to : filterTo
+      console.log('toValue:', toValue)
       const params = new URLSearchParams({ userId: emp.id })
+      console.log('params بعد userId:', params.toString())
       if(fromValue) params.append('from', fromValue)
       if(toValue) params.append('to', toValue)
+      console.log('params بعد التواريخ:', params.toString())
       // عند جلب المشاريع
+      console.log('fetch URL:', `/api/employee-projects?${params.toString()}`)
       const resp = await fetch(`/api/employee-projects?${params.toString()}`, { cache: 'no-store' })
+      console.log('بعد تنفيذ fetch، status:', resp.status)
       const json = await resp.json().catch(()=>({}))
+      console.log('استجابة json:', json)
       if(!resp.ok){
         throw new Error(json?.error || 'فشل جلب مشاريع الموظف')
       }
