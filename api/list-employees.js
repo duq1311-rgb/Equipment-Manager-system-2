@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
-  ? createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
+const supabase = (SUPABASE_URL && ANON_KEY)
+  ? createClient(SUPABASE_URL, ANON_KEY)
   : null
 
 // كاش خفيف لمدة 5 دقائق لتقليل زمن تحميل الموظفين
@@ -32,10 +32,10 @@ SUPERVISOR_UUIDS.forEach(id => ADMIN_ONLY_SET.delete(id))
 
 export default async function handler(req, res){
   if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
-  if(!supabaseAdmin){
+  if(!supabase){
     const missing = []
     if(!SUPABASE_URL) missing.push('SUPABASE_URL')
-    if(!SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
+    if(!ANON_KEY) missing.push('SUPABASE_ANON_KEY')
     return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
   }
 
@@ -57,9 +57,9 @@ export default async function handler(req, res){
       { data: transactions, error: txError },
       { data: assistantLinks, error: assistantsError }
     ] = await Promise.all([
-      supabaseAdmin.from('profiles').select('id, full_name'),
-      supabaseAdmin.from('transactions').select('id, user_id, assistant_user_id'),
-      supabaseAdmin.from('transaction_assistants').select('transaction_id, assistant_user_id')
+      supabase.from('profiles').select('id, full_name'),
+      supabase.from('transactions').select('id, user_id, assistant_user_id'),
+      supabase.from('transaction_assistants').select('transaction_id, assistant_user_id')
     ])
 
     if(profilesError) throw profilesError
