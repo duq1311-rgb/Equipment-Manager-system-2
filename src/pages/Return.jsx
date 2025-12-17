@@ -31,31 +31,10 @@ export default function ReturnPage(){
         return
       }
       
-      // جلب جميع المعدات دفعة واحدة
-      const equipmentIds = includedItems.map(it => it.equipment.id)
-      const { data: allEquipment } = await supabase
-        .from('equipment')
-        .select('id, available_qty')
-        .in('id', equipmentIds)
-      
-      const equipmentMap = new Map(
-        (allEquipment || []).map(eq => [eq.id, eq.available_qty ?? 0])
-      )
-      
       // تحديث المخزون والعناصر
       for(const it of includedItems){
-        const currentAvailableQty = equipmentMap.get(it.equipment.id) ?? 0
-        
-        if(it.returnedQty > 0){
-          // increase available by returnedQty if not lost
-          const add = it.lost ? 0 : it.returnedQty
-          if(add > 0){
-            const newQty = currentAvailableQty + add
-            await supabase.from('equipment').update({ available_qty: newQty }).eq('id', it.equipment.id)
-          }
-        }
-        
-        // update transaction_items row (include returned qty and flags)
+        // لا تعدل available_qty هنا إطلاقاً
+        // فقط حدث returned_qty في transaction_items
         await supabase.from('transaction_items').update({ 
           returned_qty: it.returnedQty, 
           damaged: it.damaged, 
