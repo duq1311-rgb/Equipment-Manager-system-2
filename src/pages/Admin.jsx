@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+console.log('Admin.jsx loaded')
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -180,6 +181,7 @@ export default function Admin(){
 
   async function loadEmployeeProjects(emp, options = {}){
     if(!emp) return
+    console.log('emp.id', emp?.id)
     setIsLoadingProjects(true)
     setSelectedEmployee(emp)
     try{
@@ -370,15 +372,18 @@ export default function Admin(){
           <p className="empty-state">لا يوجد موظفون مسجلون حالياً.</p>
         ) : (
           <div className="list-tiles">
-            {employees.map(emp => (
-              <div key={emp.id} className="list-tile">
-                <div>
-                  <div style={{fontWeight:700}}>{emp.name}</div>
-                  <small>عدد المشاريع: {emp.projectsCount}</small>
+            {employees.map(emp => {
+              console.log('Render employee:', emp);
+              return (
+                <div key={emp.id} className="list-tile">
+                  <div>
+                    <div style={{fontWeight:700}}>{emp.name}</div>
+                    <small>عدد المشاريع: {emp.projectsCount}</small>
+                  </div>
+                  <button type="button" onClick={()=>handleSelectEmployee(emp)}>عرض التفاصيل</button>
                 </div>
-                <button type="button" onClick={()=>handleSelectEmployee(emp)}>عرض التفاصيل</button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
