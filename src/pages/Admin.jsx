@@ -94,9 +94,9 @@ export default function Admin(){
         { data: transactions, error: txError },
         { data: assistantLinks, error: assistantsError }
       ] = await Promise.all([
-        supabase.from('profiles').select('id, full_name, updated_at').neq('id', '0'), // force network
-        supabase.from('transactions').select('id, user_id, assistant_user_id, updated_at').neq('id', '0'),
-        supabase.from('transaction_assistants').select('transaction_id, assistant_user_id, created_at').neq('transaction_id', '0')
+        supabase.from('profiles').select('id, full_name'),
+        supabase.from('transactions').select('id, user_id, assistant_user_id'),
+        supabase.from('transaction_assistants').select('transaction_id, assistant_user_id')
       ])
 
       if(profilesError) throw profilesError

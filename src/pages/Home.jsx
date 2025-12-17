@@ -34,7 +34,7 @@ export default function Home(){
         if(user.id){
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, updated_at').eq('id', user.id).neq('id', '0').maybeSingle()
+            .select('full_name').eq('id', user.id).maybeSingle()
           if(profile?.full_name) candidate = profile.full_name
         }
         if(mounted) setDisplayName(candidate)
@@ -48,7 +48,7 @@ export default function Home(){
 
         const isAdmin = ALL_ADMIN_UUIDS.includes(user.id)
 
-        let txQuery = supabase.from('transactions').select('id, user_id, status, transaction_items(admin_verified), transaction_assistants(assistant_user_id), updated_at').neq('id', '0')
+        let txQuery = supabase.from('transactions').select('id, user_id, status, transaction_items(admin_verified), transaction_assistants(assistant_user_id)')
         
         const { data: transactions } = await txQuery
         const allTransactions = transactions || []
