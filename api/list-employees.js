@@ -67,8 +67,8 @@ export default async function handler(req, res){
     if(assistantsError) throw assistantsError
 
     console.log('[list-employees] Fetched:', { profilesCount: profiles?.length, txCount: transactions?.length })
-    const authUsers = await fetchAllUsers()
-    console.log('[list-employees] Auth users count:', authUsers?.length)
+    // استخدم profiles مباشرة بدل auth.users (لا نحتاج SERVICE_ROLE_KEY)
+    const employees = profiles || []
 
     const countMap = {}
       function increment(id){
@@ -100,36 +100,26 @@ export default async function handler(req, res){
 
     const employeeMap = new Map()
 
-    authUsers.forEach(user => {
-      employeeMap.set(user.id, {
-        id: user.id,
-        email: user.email || '',
-        name: profileMap.get(user.id) || user.user_metadata?.full_name || user.email || user.id,
-        projectsCount: countMap[user.id] || 0,
-      })
-    })
-
-    profileMap.forEach((fullName, id) => {
-      if(employeeMap.has(id)) return
-      employeeMap.set(id, {
-        id,
+    // بناء employeeMap مباشرة من profiles
+    employees.forEach(profile => {
+      employeeMap.set(profile.id, {
+        id: profile.id,
         email: '',
-        name: fullName || id,
-        projectsCount: countMap[id] || 0,
+        name: profile.full_name || profile.id,
+        projectsCount: countMap[profile.id] || 0,
       })
     })
 
+    // إضافة أي معرفات موظفين ليسوا مسجلين في profiles 
     Object.entries(countMap).forEach(([id, projectsCount]) => {
-      if(employeeMap.has(id)){
-        employeeMap.get(id).projectsCount = projectsCount
-        return
+      if(!employeeMap.has(id)){
+        employeeMap.set(id, {
+          id,
+          email: '',
+          name: id,
+          projectsCount,
+        })
       }
-      employeeMap.set(id, {
-        id,
-        email: '',
-        name: id,
-        projectsCount,
-      })
     })
 
     // Ensure specific admin users are included in employees list
@@ -179,17 +169,3 @@ export default async function handler(req, res){
   }
 }
 
-async function fetchAllUsers(){
-  const perPage = 200
-  let page = 1
-  const users = []
-  while(true){
-    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
-    if(error) throw error
-    const chunk = data?.users || []
-    users.push(...chunk)
-    if(!chunk.length || chunk.length < perPage) break
-    page += 1
-  }
-  return users
-}
