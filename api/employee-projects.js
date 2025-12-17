@@ -8,19 +8,19 @@ const supabaseAdmin = (SUPABASE_URL && SERVICE_ROLE_KEY)
   : null
 
 export default async function handler(req, res){
-  if(req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if(req.method !== 'GET') return res.status(405).json({ projects: [], error: 'Method not allowed' })
   if(!supabaseAdmin){
     const missing = []
     if(!SUPABASE_URL) missing.push('SUPABASE_URL')
     if(!SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY')
-    return res.status(500).json({ error: `Server not configured: missing ${missing.join(', ')}` })
+    return res.status(500).json({ projects: [], error: `Server not configured: missing ${missing.join(', ')}` })
   }
 
   // Prevent stale cache in clients
   res.set('Cache-Control', 'no-store')
 
   const { userId, from: fromParam, to: toParam } = req.query || {}
-  if(!userId) return res.status(400).json({ error: 'userId parameter is required' })
+  if(!userId) return res.status(400).json({ projects: [], error: 'userId parameter is required' })
 
   try{
     const [ownedOrLeadResult, assistantLinksResult] = await Promise.all([
@@ -97,6 +97,6 @@ export default async function handler(req, res){
 
     res.status(200).json({ projects })
   }catch(error){
-    res.status(500).json({ error: error.message || 'Unknown error' })
+    res.status(200).json({ projects: [], error: error.message || 'Unknown error' })
   }
 }
