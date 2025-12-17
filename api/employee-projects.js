@@ -41,6 +41,9 @@ export default async function handler(req, res){
     const directTransactions = ownedOrLeadResult.data || []
     const assistantLinks = assistantLinksResult.data || []
 
+    console.log('directTransactions:', directTransactions);
+    console.log('assistantLinks:', assistantLinks);
+
     const existingIds = new Set(directTransactions.map(tx => tx.id))
     const extraIds = assistantLinks
       .map(link => link.transaction_id)
@@ -57,7 +60,10 @@ export default async function handler(req, res){
       extraTransactions = extraData || []
     }
 
+    console.log('extraTransactions:', extraTransactions);
+
     const allTransactions = [...directTransactions, ...extraTransactions]
+    console.log('allTransactions:', allTransactions);
 
   const fromDateRaw = fromParam ? new Date(fromParam) : null
   const toDateRaw = toParam ? new Date(toParam) : null
