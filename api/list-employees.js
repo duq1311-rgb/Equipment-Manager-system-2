@@ -3,17 +3,6 @@ import { createClient } from '@supabase/supabase-js'
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
 
-// Debug: طباعة المتغيرات البيئية المتوفرة
-console.log('[list-employees] ENV CHECK:', {
-  hasSupabaseUrl: !!process.env.SUPABASE_URL,
-  hasViteSupabaseUrl: !!process.env.VITE_SUPABASE_URL,
-  hasSupabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
-  hasViteSupabaseAnonKey: !!process.env.VITE_SUPABASE_ANON_KEY,
-  finalUrl: SUPABASE_URL ? 'SET' : 'MISSING',
-  finalKey: ANON_KEY ? 'SET' : 'MISSING',
-  allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE'))
-})
-
 const supabase = (SUPABASE_URL && ANON_KEY)
   ? createClient(SUPABASE_URL, ANON_KEY)
   : null
