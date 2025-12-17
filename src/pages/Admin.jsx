@@ -88,12 +88,35 @@ export default function Admin(){
   async function loadEmployees(){
     setIsLoadingEmployees(true)
     try{
-      const resp = await fetch('/api/list-employees')
-      const json = await resp.json().catch(()=>({}))
-      if(!resp.ok){
-        throw new Error(json?.error || 'فشل جلب بيانات الموظفين')
-      }
-      setEmployees(json.employees || [])
+      // قراءة الموظفين مباشرة من Supabase
+      const [
+        { data: profiles, error: profilesError },
+        { data: transactions, error: txError }
+      ] = await Promise.all([
+        supabase.from('profiles').select('id, full_name'),
+        supabase.from('transactions').select('id, user_id')
+      ])
+
+      if(profilesError) throw profilesError
+      if(txError) throw txError
+
+      // حساب عدد المشاريع لكل موظف
+      const countMap = {}
+      ;(transactions || []).forEach(tx => {
+        if(tx.user_id){
+          countMap[tx.user_id] = (countMap[tx.user_id] || 0) + 1
+        }
+      })
+
+      // تحويل البيانات للصيغة المطلوبة
+      const employeesList = (profiles || []).map(profile => ({
+        id: profile.id,
+        name: profile.full_name || profile.id,
+        email: '',
+        projectsCount: countMap[profile.id] || 0
+      }))
+
+      setEmployees(employeesList)
     }catch(error){
       setMsg(`تعذّر جلب بيانات الموظفين: ${error.message}`)
       setEmployees([])

@@ -83,13 +83,23 @@ export default function AdminVerify(){
   async function loadEmployeeDirectory(){
     setIsLoadingDirectory(true)
     try{
-      const resp = await fetch('/api/list-employees')
-      const json = await resp.json().catch(()=>({}))
-      if(!resp.ok) throw new Error(json?.error || 'فشل جلب معلومات الموظفين')
+      // قراءة الموظفين مباشرة من Supabase
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+      
+      if(error) throw error
+
       const map = {}
-      ;(json.employees||[]).forEach(emp => {
-        map[emp.id] = emp
+      ;(profiles || []).forEach(profile => {
+        map[profile.id] = {
+          id: profile.id,
+          name: profile.full_name || profile.id,
+          email: '',
+          projectsCount: 0
+        }
       })
+      
       Object.entries(ADMIN_ONLY_NAMES).forEach(([id, name]) => {
         if(!map[id]){
           map[id] = { id, name, email: '', projectsCount: 0 }

@@ -22,10 +22,21 @@ export default function Checkout(){
   async function fetchEmployees(){
     setIsLoadingEmployees(true)
     try{
-      const resp = await fetch('/api/list-employees')
-      const json = await resp.json().catch(()=>({}))
-      if(!resp.ok) throw new Error(json?.error || 'تعذّر تحميل قائمة الموظفين')
-      setEmployees(json.employees || [])
+      // قراءة الموظفين مباشرة من Supabase
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+      
+      if(error) throw error
+
+      const employeesList = (profiles || []).map(profile => ({
+        id: profile.id,
+        name: profile.full_name || profile.id,
+        email: '',
+        projectsCount: 0
+      }))
+
+      setEmployees(employeesList)
     }catch(error){
       setMsg(error.message)
       setEmployees([])
