@@ -116,6 +116,7 @@ export default function Admin(){
         projectsCount: countMap[profile.id] || 0
       }))
 
+      console.log('[Admin] Loaded employees:', employeesList.length, employeesList)
       setEmployees(employeesList)
     }catch(error){
       setMsg(`تعذّر جلب بيانات الموظفين: ${error.message}`)
